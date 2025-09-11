@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - Professional Services</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="/config.js"></script>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <h1>Portfolio</h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#portfolio">Portfolio</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="hero-content">
+                <h1>Professional Web Development Services</h1>
+                <p>Creating modern, responsive, and user-friendly web solutions for your business</p>
+                <a href="#services" class="cta-button">View Services</a>
+            </div>
+        </section>
+
+        <section id="about" class="about">
+            <div class="container">
+                <h2>About Me</h2>
+                <p>I'm a professional web developer with expertise in modern technologies and a passion for creating exceptional digital experiences.</p>
+            </div>
+        </section>
+
+        <section id="services" class="services">
+            <div class="container">
+                <h2>Services</h2>
+                <div class="services-grid">
+                    <div class="service-card">
+                        <h3>Website Development</h3>
+                        <p>Custom websites built with modern technologies</p>
+                        <div class="price">$500</div>
+                        <button class="buy-button" data-service="website" data-price="50000">Buy Now</button>
+                    </div>
+                    <div class="service-card">
+                        <h3>E-commerce Solutions</h3>
+                        <p>Complete online store setup with payment processing</p>
+                        <div class="price">$1,200</div>
+                        <button class="buy-button" data-service="ecommerce" data-price="120000">Buy Now</button>
+                    </div>
+                    <div class="service-card">
+                        <h3>Consultation</h3>
+                        <p>One-on-one consultation for your project</p>
+                        <div class="price">$100</div>
+                        <button class="buy-button" data-service="consultation" data-price="10000">Buy Now</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="portfolio" class="portfolio">
+            <div class="container">
+                <h2>Portfolio</h2>
+                <div class="portfolio-grid">
+                    <div class="portfolio-item">
+                        <h3>E-commerce Platform</h3>
+                        <p>Modern online store with payment integration</p>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Corporate Website</h3>
+                        <p>Professional company website with CMS</p>
+                    </div>
+                    <div class="portfolio-item">
+                        <h3>Mobile App</h3>
+                        <p>Cross-platform mobile application</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="contact">
+            <div class="container">
+                <h2>Contact</h2>
+                <p>Ready to start your project? Get in touch!</p>
+                <div class="contact-info">
+                    <p>Email: contact@portfolio.com</p>
+                    <p>Phone: (555) 123-4567</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Purchase Service</h2>
+            <div id="service-details"></div>
+            <form id="payment-form">
+                <div id="card-element">
+                    <!-- Stripe Elements will create form elements here -->
+                </div>
+                <div id="card-errors" role="alert"></div>
+                <button type="submit" id="submit-payment">
+                    <span id="button-text">Pay Now</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Portfolio. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
