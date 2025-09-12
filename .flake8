@@ -1,0 +1,6 @@
+# flake8 configuration
+[flake8]
+max-line-length = 88
+exclude = .git,__pycache__,.venv,venv
+ignore = E203,W503
+max-complexity = 10
