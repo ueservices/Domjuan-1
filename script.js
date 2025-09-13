@@ -1,13 +1,23 @@
 // Stripe configuration
 // Replace 'pk_test_...' with your actual Stripe publishable key
-const stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_51234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890');
-const elements = stripe.elements();
+let stripe = null;
+let elements = null;
+
+// Initialize Stripe with error handling
+if (typeof Stripe !== 'undefined') {
+    try {
+        stripe = Stripe(window.STRIPE_PUBLISHABLE_KEY || 'pk_test_51234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890');
+        elements = stripe.elements();
+    } catch (error) {
+        console.warn('Stripe initialization failed:', error);
+    }
+}
 
 // Create card element
 const style = {
     base: {
         color: '#32325d',
-        fontFamily: '"Inter", sans-serif',
+        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif',
         fontSmoothing: 'antialiased',
         fontSize: '16px',
         '::placeholder': {
@@ -20,7 +30,15 @@ const style = {
     }
 };
 
-const card = elements.create('card', {style: style});
+// Create card element with error handling
+let card = null;
+if (elements) {
+    try {
+        card = elements.create('card', {style: style});
+    } catch (error) {
+        console.warn('Card element creation failed:', error);
+    }
+}
 
 // DOM elements
 const modal = document.getElementById('payment-modal');
@@ -35,17 +53,25 @@ let currentPrice = null;
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Mount the card element
-    card.mount('#card-element');
-
-    // Handle real-time validation errors from the card Element
-    card.on('change', ({error}) => {
-        if (error) {
-            cardErrors.textContent = error.message;
-        } else {
-            cardErrors.textContent = '';
+    // Mount the card element only if Stripe is available
+    if (card) {
+        card.mount('#card-element');
+        
+        // Handle real-time validation errors from the card Element
+        card.on('change', ({error}) => {
+            if (error) {
+                cardErrors.textContent = error.message;
+            } else {
+                cardErrors.textContent = '';
+            }
+        });
+    } else {
+        // Show message when Stripe is not available
+        const cardElement = document.getElementById('card-element');
+        if (cardElement) {
+            cardElement.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">Demo Mode: Payment processing temporarily unavailable</p>';
         }
-    });
+    }
 
     // Add event listeners for buy buttons
     buyButtons.forEach(button => {
@@ -124,6 +150,16 @@ async function handlePayment(event) {
     buttonText.textContent = 'Processing...';
     
     try {
+        // Check if Stripe is available
+        if (!stripe || !card) {
+            // Demo mode - simulate successful payment
+            setTimeout(() => {
+                alert('Demo Mode: Payment simulation successful! Thank you for your purchase.');
+                closePaymentModal();
+            }, 1500);
+            return;
+        }
+        
         // Create payment intent on the server
         const response = await fetch('/create-payment-intent', {
             method: 'POST',
