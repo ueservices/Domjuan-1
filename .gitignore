@@ -49,6 +49,13 @@ Thumbs.db
 # Build outputs
 dist/
 build/
+server/public
+
+# Vite configuration backups
+vite.config.ts.*
+
+# Archives
+*.tar.gz
 
 # Cache
 .cache/
