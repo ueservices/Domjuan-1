@@ -12,12 +12,12 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            scriptSrc: ["'self'", "https://js.stripe.com"],
-            frameSrc: ["https://js.stripe.com"],
-            connectSrc: ["'self'", "https://api.stripe.com"]
+            defaultSrc: ['\'self\''],
+            styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
+            fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
+            scriptSrc: ['\'self\'', 'https://js.stripe.com'],
+            frameSrc: ['https://js.stripe.com'],
+            connectSrc: ['\'self\'', 'https://api.stripe.com']
         }
     }
 }));
@@ -66,14 +66,14 @@ app.get('/health', (req, res) => {
 app.post('/create-payment-intent', async (req, res) => {
     try {
         const { service, amount } = req.body;
-        
+
         // Validate service and amount
         if (!SERVICES[service] || SERVICES[service].price !== amount) {
             return res.status(400).json({ error: 'Invalid service or amount' });
         }
-        
+
         const serviceInfo = SERVICES[service];
-        
+
         // Create a PaymentIntent with the order amount and currency
         const paymentIntent = await stripe.paymentIntents.create({
             amount: serviceInfo.price,
@@ -84,7 +84,7 @@ app.post('/create-payment-intent', async (req, res) => {
             },
             description: serviceInfo.description
         });
-        
+
         res.json({
             client_secret: paymentIntent.client_secret
         });
@@ -98,31 +98,33 @@ app.post('/create-payment-intent', async (req, res) => {
 app.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    
+
     let event;
-    
+
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
-        console.log(`Webhook signature verification failed.`, err.message);
+        console.log('Webhook signature verification failed.', err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-    
+
     // Handle the event
     switch (event.type) {
-        case 'payment_intent.succeeded':
-            const paymentIntent = event.data.object;
-            console.log('PaymentIntent was successful!', paymentIntent.id);
-            // Handle successful payment (e.g., send confirmation email, update database)
-            break;
-        case 'payment_method.attached':
-            const paymentMethod = event.data.object;
-            console.log('PaymentMethod was attached to a Customer!', paymentMethod.id);
-            break;
-        default:
-            console.log(`Unhandled event type ${event.type}`);
+    case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object;
+        console.log('PaymentIntent was successful!', paymentIntent.id);
+        // Handle successful payment (e.g., send confirmation email, update database)
+        break;
     }
-    
+    case 'payment_method.attached': {
+        const paymentMethod = event.data.object;
+        console.log('PaymentMethod was attached to a Customer!', paymentMethod.id);
+        break;
+    }
+    default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
     res.json({received: true});
 });
 
@@ -140,7 +142,7 @@ app.get('/api/services/:serviceId', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });

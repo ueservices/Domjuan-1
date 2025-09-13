@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mount the card element only if Stripe is available
     if (card) {
         card.mount('#card-element');
-        
+
         // Handle real-time validation errors from the card Element
         card.on('change', ({error}) => {
             if (error) {
@@ -113,21 +113,21 @@ document.addEventListener('DOMContentLoaded', function() {
 function openPaymentModal(service, price) {
     currentService = service;
     currentPrice = parseInt(price);
-    
+
     const serviceNames = {
         'website': 'Website Development',
         'ecommerce': 'E-commerce Solutions',
         'consultation': 'Consultation'
     };
-    
+
     const serviceName = serviceNames[service] || service;
     const displayPrice = (currentPrice / 100).toFixed(2);
-    
+
     serviceDetails.innerHTML = `
         <h3>${serviceName}</h3>
         <p>Price: $${displayPrice}</p>
     `;
-    
+
     modal.style.display = 'block';
 }
 
@@ -141,14 +141,14 @@ function closePaymentModal() {
 
 async function handlePayment(event) {
     event.preventDefault();
-    
+
     const submitButton = document.getElementById('submit-payment');
     const buttonText = document.getElementById('button-text');
-    
+
     // Disable the submit button and show loading state
     submitButton.disabled = true;
     buttonText.textContent = 'Processing...';
-    
+
     try {
         // Check if Stripe is available
         if (!stripe || !card) {
@@ -159,7 +159,7 @@ async function handlePayment(event) {
             }, 1500);
             return;
         }
-        
+
         // Create payment intent on the server
         const response = await fetch('/create-payment-intent', {
             method: 'POST',
@@ -171,13 +171,13 @@ async function handlePayment(event) {
                 amount: currentPrice
             })
         });
-        
+
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
-        
+
         const {client_secret} = await response.json();
-        
+
         // Confirm the payment
         const result = await stripe.confirmCardPayment(client_secret, {
             payment_method: {
@@ -187,7 +187,7 @@ async function handlePayment(event) {
                 }
             }
         });
-        
+
         if (result.error) {
             // Show error to customer
             cardErrors.textContent = result.error.message;
@@ -198,7 +198,7 @@ async function handlePayment(event) {
         }
     } catch (error) {
         console.error('Payment error:', error);
-        
+
         // For demo purposes, simulate a successful payment
         // In production, remove this and handle the actual server response
         if (error.message === 'Network response was not ok' || error.message.includes('fetch')) {
@@ -215,7 +215,7 @@ async function handlePayment(event) {
 }
 
 // Contact form handling (if you add one later)
-function handleContactForm(event) {
+function _handleContactForm(event) {
     event.preventDefault();
     // Handle contact form submission
     alert('Thank you for your message! We will get back to you soon.');
@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Utility function to format currency
-function formatCurrency(cents) {
+function _formatCurrency(cents) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD'
@@ -257,7 +257,7 @@ function formatCurrency(cents) {
 }
 
 // Simple analytics tracking (placeholder)
-function trackEvent(eventName, eventData) {
+function _trackEvent(eventName, eventData) {
     console.log('Event:', eventName, eventData);
     // Integrate with your analytics service (Google Analytics, etc.)
 }
