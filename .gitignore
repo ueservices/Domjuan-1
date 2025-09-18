@@ -52,3 +52,24 @@ build/
 
 # Cache
 .cache/
+
+# GitHub Copilot and AI tools
+.copilot/
+.ai/
+
+# Code analysis and linting
+.eslintcache
+.stylelintcache
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+
+# Security scanning
+.snyk
+security-scan-results/
+
+# Temporary files for development
+.tmp/
+scratch/
