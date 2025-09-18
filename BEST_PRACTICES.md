@@ -1,13 +1,14 @@
 # Best Practices Cheat Sheet
 
-## 1. Python Code Quality
+## 1. Node.js & JavaScript Code Quality
 
-- **Use Linters**: Integrate tools like `pylint` or `flake8` to catch errors and enforce style.
-- **Type Annotations**: Use type hints for function signatures and variables.
-- **Follow PEP 8**: Stick to official Python style guidelines.
-- **Write Tests**: Use `pytest` or `unittest` for thorough test coverage.
-- **Avoid Code Duplication**: Use functions and modules to reuse logic.
-- **Document Code**: Use docstrings for modules, classes, and functions.
+- **Use ESLint**: Integrate ESLint to catch errors and enforce consistent style.
+- **Modern JavaScript**: Use ES6+ features like const/let, arrow functions, template literals.
+- **Error Handling**: Use try-catch blocks and proper error responses.
+- **Write Tests**: Use Jest, Mocha, or similar testing frameworks.
+- **Avoid Code Duplication**: Create reusable functions and modules.
+- **Document Code**: Use JSDoc comments for functions and complex logic.
+- **Security First**: Validate inputs, sanitize data, use parameterized queries.
 
 ## 2. GitHub Actions & Workflows
 
@@ -47,3 +48,33 @@
 ---
 
 _Apply these practices to your repositories for reliable, secure, and maintainable software!_
+
+## 6. GitHub Copilot Best Practices
+
+### Working with Copilot
+- **Clear Context**: Provide clear, descriptive comments about what you want to achieve.
+- **Review Suggestions**: Always review and test Copilot suggestions before accepting.
+- **Security Review**: Pay special attention to security implications of generated code.
+- **Iterative Refinement**: Use Copilot for initial implementation, then refine and optimize.
+- **Documentation**: Use Copilot to help generate comprehensive documentation.
+
+### Code Generation Guidelines
+- **Start with Comments**: Write detailed comments describing functionality before coding.
+- **Use Descriptive Names**: Clear variable and function names help Copilot understand context.
+- **Provide Examples**: Include example inputs/outputs in comments for complex functions.
+- **Break Down Complex Tasks**: Split large tasks into smaller, manageable pieces.
+- **Test Generated Code**: Always write tests for Copilot-generated code.
+
+### Copilot for this Project
+- **Payment Security**: Be extra cautious with payment-related code generation.
+- **Environment Variables**: Ensure secrets are never hardcoded in generated code.
+- **Error Handling**: Verify proper error handling in all generated endpoints.
+- **Input Validation**: Double-check that all inputs are properly validated.
+- **Stripe Integration**: Follow Stripe best practices in all generated payment code.
+
+### Quality Assurance
+- **Code Review**: Have human review of all Copilot-generated code.
+- **Testing**: Write comprehensive tests for generated functionality.
+- **Security Scanning**: Run security tools on generated code.
+- **Performance**: Monitor performance impact of generated solutions.
+- **Maintainability**: Ensure generated code follows project patterns and is maintainable.
