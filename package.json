@@ -7,7 +7,16 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'Static site - no build step required'",
-    "test": "echo 'No tests specified'"
+    "test": "npm run test:basic && npm run test:security",
+    "test:basic": "node test/basic-test.js",
+    "test:security": "npm audit --audit-level moderate",
+    "test:syntax": "node -c server.js && node -c script.js",
+    "lint": "npm run test:syntax",
+    "audit:fix": "npm audit fix",
+    "check:outdated": "npm outdated",
+    "dev:clean": "rm -rf node_modules package-lock.json && npm install",
+    "deploy:heroku": "./deploy.sh",
+    "validate": "npm run lint && npm run test && npm run test:security"
   },
   "keywords": [
     "portfolio",
