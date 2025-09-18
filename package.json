@@ -7,7 +7,12 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'Static site - no build step required'",
-    "test": "echo 'No tests specified'"
+    "test": "npm run lint && npm run security-check",
+    "lint": "eslint . --ext .js --fix",
+    "lint:check": "eslint . --ext .js",
+    "security-check": "npm audit --audit-level moderate",
+    "security-scan": "npm run security-check && echo 'Security scan completed'",
+    "validate-env": "node -e \"const required = ['STRIPE_SECRET_KEY', 'STRIPE_PUBLISHABLE_KEY']; required.forEach(key => { if (!process.env[key]) { console.error('Missing required env var:', key); process.exit(1); } }); console.log('Environment validation passed');\""
   },
   "keywords": [
     "portfolio",
@@ -26,7 +31,9 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-security": "^1.7.1"
   },
   "engines": {
     "node": ">=18.0.0"

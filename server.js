@@ -12,12 +12,12 @@ const PORT = process.env.PORT || 3000;
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            scriptSrc: ["'self'", "https://js.stripe.com"],
-            frameSrc: ["https://js.stripe.com"],
-            connectSrc: ["'self'", "https://api.stripe.com"]
+            defaultSrc: ['\'self\''],
+            styleSrc: ['\'self\'', '\'unsafe-inline\'', 'https://fonts.googleapis.com'],
+            fontSrc: ['\'self\'', 'https://fonts.gstatic.com'],
+            scriptSrc: ['\'self\'', 'https://js.stripe.com'],
+            frameSrc: ['https://js.stripe.com'],
+            connectSrc: ['\'self\'', 'https://api.stripe.com']
         }
     }
 }));
@@ -110,15 +110,17 @@ app.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
     
     // Handle the event
     switch (event.type) {
-        case 'payment_intent.succeeded':
+        case 'payment_intent.succeeded': {
             const paymentIntent = event.data.object;
             console.log('PaymentIntent was successful!', paymentIntent.id);
             // Handle successful payment (e.g., send confirmation email, update database)
             break;
-        case 'payment_method.attached':
+        }
+        case 'payment_method.attached': {
             const paymentMethod = event.data.object;
             console.log('PaymentMethod was attached to a Customer!', paymentMethod.id);
             break;
+        }
         default:
             console.log(`Unhandled event type ${event.type}`);
     }
@@ -140,7 +142,7 @@ app.get('/api/services/:serviceId', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });

@@ -47,3 +47,16 @@
 ---
 
 _Apply these practices to your repositories for reliable, secure, and maintainable software!_
+
+## 6. GitHub Copilot Agent Configuration
+
+- **Agent Instructions**: Create `.github/copilot-instructions.md` with clear project context
+- **Code Ownership**: Define CODEOWNERS for security-sensitive files
+- **Issue Templates**: Use structured templates for bugs, features, and security
+- **PR Templates**: Standardize pull request documentation
+- **Dependabot**: Automate dependency updates with proper grouping
+- **Linting Integration**: Configure ESLint with security plugins
+- **Branch Protection**: Require reviews and status checks
+- **Security Scanning**: Enable automated vulnerability detection
+- **Context Files**: Help agents understand key files and patterns
+- **Environment Validation**: Create scripts to validate required configuration

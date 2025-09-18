@@ -1,0 +1,31 @@
+# Code Owners
+# This file defines code ownership for automated reviews and approvals
+
+# Global owners - responsible for overall repository maintenance
+* @ueservices
+
+# Security-sensitive files require additional review
+/server.js @ueservices
+/script.js @ueservices
+/.env.example @ueservices
+/SECURITY.md @ueservices
+/deploy.sh @ueservices
+
+# Payment processing code requires security review
+/server.js @ueservices
+/script.js @ueservices
+
+# Configuration and deployment files
+/.github/ @ueservices
+/package.json @ueservices
+/package-lock.json @ueservices
+/Procfile @ueservices
+
+# Documentation changes
+/README.md @ueservices
+/BEST_PRACTICES.md @ueservices
+/SECURITY.md @ueservices
+
+# Workflow and CI/CD configurations
+/.github/workflows/ @ueservices
+/.github/copilot-instructions.md @ueservices
