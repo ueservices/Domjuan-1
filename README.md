@@ -111,9 +111,12 @@ The website uses Stripe for secure payment processing:
 
 - Content Security Policy (CSP)
 - CORS protection
-- Input validation
+- Rate limiting for API endpoints
+- Input validation and sanitization
 - Secure payment handling
 - Environment variable protection
+- Express security middleware (helmet)
+- Automated security vulnerability scanning
 
 ## Development
 
@@ -136,7 +139,10 @@ The website uses Stripe for secure payment processing:
 
 - `npm start`: Start production server
 - `npm run dev`: Start development server with auto-reload
-- `npm test`: Run tests
+- `npm test`: Run linting and unit tests
+- `npm run test:watch`: Run tests in watch mode
+- `npm run lint`: Run linter and auto-fix issues
+- `npm run lint:check`: Check linting without fixing
 - `npm run build`: Build for production
 
 ### Customization
