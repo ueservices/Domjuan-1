@@ -1,0 +1,34 @@
+# Domjuan Bot System - Autonomous Operations Crontab
+# Copy this to your crontab with: crontab -e
+# Adjust paths according to your installation directory
+
+# Set environment variables
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/opt/domjuan-bot-system
+
+# Monitor system health every 5 minutes
+*/5 * * * * /opt/domjuan-bot-system/scripts/monitor.sh >> /var/log/domjuan-monitor.log 2>&1
+
+# Daily backup at 2:00 AM
+0 2 * * * /opt/domjuan-bot-system/scripts/backup.sh >> /var/log/domjuan-backup.log 2>&1
+
+# Log rotation daily at 4:00 AM (before PM2 restart)
+0 4 * * * /usr/sbin/logrotate /etc/logrotate.d/domjuan
+
+# Weekly health report every Sunday at 8:00 AM
+0 8 * * 0 curl -s http://localhost:3000/api/status | jq '.' >> /var/log/domjuan-weekly-report.log
+
+# Monthly cleanup of old data exports (older than 90 days)
+0 3 1 * * find /opt/domjuan-bot-system/data -name "*.json" -mtime +90 -delete
+0 3 1 * * find /opt/domjuan-bot-system/data -name "*.csv" -mtime +90 -delete
+
+# Restart bots weekly (Sunday at 3:00 AM) for maintenance
+0 3 * * 0 curl -X POST http://localhost:3000/api/restart-bots
+
+# Check disk space daily at 6:00 AM
+0 6 * * * df -h /opt/domjuan-bot-system >> /var/log/domjuan-disk-usage.log
+
+# Auto-export bot data every 4 hours during business hours
+0 8,12,16,20 * * * curl -s http://localhost:3000/api/export/json > /dev/null
+30 8,12,16,20 * * * curl -s http://localhost:3000/api/export/csv > /dev/null

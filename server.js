@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
+const fs = require('fs').promises;
 const BotManager = require('./bots/botManager');
 require('dotenv').config();
 
@@ -12,6 +13,21 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
+
+// Ensure required directories exist
+async function ensureDirectories() {
+    const dirs = ['./data', './logs', './backups'];
+    for (const dir of dirs) {
+        try {
+            await fs.mkdir(dir, { recursive: true });
+        } catch (error) {
+            console.warn(`Could not create directory ${dir}:`, error.message);
+        }
+    }
+}
+
+// Initialize directories
+ensureDirectories().catch(console.error);
 
 // Initialize bot manager
 const botManager = new BotManager();
@@ -51,6 +67,108 @@ const SERVICES = {
         description: 'One-on-one consultation session'
     }
 };
+
+// Health check endpoint for monitoring and Docker
+app.get('/health', async (req, res) => {
+    try {
+        const healthStatus = await botManager.getHealthStatus();
+        res.status(healthStatus.status === 'healthy' ? 200 : 503).json({
+            status: healthStatus.status,
+            timestamp: new Date().toISOString(),
+            uptime: healthStatus.uptime,
+            bots: healthStatus.botsActive + '/' + healthStatus.totalBots,
+            memory: healthStatus.memory,
+            stats: healthStatus.stats
+        });
+    } catch (error) {
+        res.status(500).json({
+            status: 'error',
+            timestamp: new Date().toISOString(),
+            error: error.message
+        });
+    }
+});
+
+// Detailed system status endpoint
+app.get('/api/status', async (req, res) => {
+    try {
+        const healthStatus = await botManager.getHealthStatus();
+        res.json(healthStatus);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Bot control endpoints
+app.post('/api/restart-bots', (req, res) => {
+    try {
+        botManager.stopAllBots();
+        setTimeout(() => {
+            botManager.startAllBots();
+            res.json({ 
+                success: true, 
+                message: 'Bots restarted successfully',
+                timestamp: new Date().toISOString()
+            });
+        }, 2000);
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post('/api/start-bots', (req, res) => {
+    try {
+        botManager.startAllBots();
+        res.json({ 
+            success: true, 
+            message: 'Bots started successfully',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post('/api/stop-bots', (req, res) => {
+    try {
+        botManager.stopAllBots();
+        res.json({ 
+            success: true, 
+            message: 'Bots stopped successfully',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// Export endpoints for automated data export
+app.get('/api/export/json', async (req, res) => {
+    try {
+        const { jsonPath } = await botManager.exportAllData();
+        res.download(jsonPath, `domjuan-export-${new Date().toISOString().split('T')[0]}.json`);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/export/csv', async (req, res) => {
+    try {
+        const { csvPath } = await botManager.exportAllData();
+        res.download(csvPath, `domjuan-domains-${new Date().toISOString().split('T')[0]}.csv`);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // Routes
 app.get('/', (req, res) => {
