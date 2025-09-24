@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Discovery System - Real-Time Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> Autonomous Discovery System</h1>
+                <div class="system-status">
+                    <span class="status-indicator" id="system-status-indicator"></span>
+                    <span id="system-status-text">Initializing...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <div class="control-buttons">
+                <button id="start-system" class="btn btn-success" disabled>
+                    <i class="fas fa-play"></i> Start Autonomous Operations
+                </button>
+                <button id="stop-system" class="btn btn-danger" disabled>
+                    <i class="fas fa-stop"></i> Stop Operations
+                </button>
+                <button id="deep-whisper-btn" class="btn btn-special" title="Advanced AI Correlation Detection">
+                    <i class="fas fa-magic"></i> Deep Whisper Scan
+                </button>
+            </div>
+            <div class="system-metrics">
+                <div class="metric">
+                    <span class="metric-label">Total Discoveries</span>
+                    <span id="total-discoveries" class="metric-value">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Active Scans</span>  
+                    <span id="active-scans" class="metric-value">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Collaborations</span>
+                    <span id="collaborations" class="metric-value">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Deep Whisper Scans</span>
+                    <span id="deep-whisper-scans" class="metric-value">0</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bot Status Grid -->
+        <section class="bot-grid">
+            <div class="bot-card" id="domain-hunter-card">
+                <div class="bot-header">
+                    <h3><i class="fas fa-globe"></i> Domain Hunter</h3>
+                    <span class="bot-status" id="domain-hunter-status">Offline</span>
+                </div>
+                <div class="bot-metrics">
+                    <div class="bot-metric">
+                        <span>Tasks Completed</span>
+                        <span id="domain-hunter-tasks">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Discoveries</span>
+                        <span id="domain-hunter-discoveries">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Success Rate</span>
+                        <span id="domain-hunter-success">100%</span>
+                    </div>
+                </div>
+                <div class="bot-activity" id="domain-hunter-activity">
+                    <div class="activity-log">No activity yet</div>
+                </div>
+            </div>
+
+            <div class="bot-card" id="asset-seeker-card">
+                <div class="bot-header">
+                    <h3><i class="fas fa-search-dollar"></i> Asset Seeker</h3>
+                    <span class="bot-status" id="asset-seeker-status">Offline</span>
+                </div>
+                <div class="bot-metrics">
+                    <div class="bot-metric">
+                        <span>Tasks Completed</span>
+                        <span id="asset-seeker-tasks">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Discoveries</span>
+                        <span id="asset-seeker-discoveries">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Success Rate</span>
+                        <span id="asset-seeker-success">100%</span>
+                    </div>
+                </div>
+                <div class="bot-activity" id="asset-seeker-activity">
+                    <div class="activity-log">No activity yet</div>
+                </div>
+            </div>
+
+            <div class="bot-card" id="recursive-explorer-card">
+                <div class="bot-header">
+                    <h3><i class="fas fa-project-diagram"></i> Recursive Explorer</h3>
+                    <span class="bot-status" id="recursive-explorer-status">Offline</span>
+                </div>
+                <div class="bot-metrics">
+                    <div class="bot-metric">
+                        <span>Tasks Completed</span>
+                        <span id="recursive-explorer-tasks">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Discoveries</span>
+                        <span id="recursive-explorer-discoveries">0</span>
+                    </div>
+                    <div class="bot-metric">
+                        <span>Success Rate</span>
+                        <span id="recursive-explorer-success">100%</span>
+                    </div>
+                </div>
+                <div class="bot-activity" id="recursive-explorer-activity">
+                    <div class="activity-log">No activity yet</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Discovery Feed -->
+        <section class="discovery-feed">
+            <h2><i class="fas fa-stream"></i> Live Discovery Feed</h2>
+            <div class="discovery-filters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="domain">Domains</button>
+                <button class="filter-btn" data-filter="asset">Assets</button>
+                <button class="filter-btn" data-filter="recursive">Recursive</button>
+                <button class="filter-btn" data-filter="deep-whisper">Deep Whisper</button>
+            </div>
+            <div id="discovery-list" class="discovery-list">
+                <div class="discovery-placeholder">
+                    <i class="fas fa-satellite-dish"></i>
+                    <p>Waiting for autonomous discoveries...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Logs -->
+        <section class="system-logs">
+            <h2><i class="fas fa-terminal"></i> System Activity</h2>
+            <div id="log-container" class="log-container">
+                <div class="log-entry system">
+                    <span class="timestamp">[INIT]</span>
+                    <span class="message">Dashboard initialized. Connecting to autonomous system...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Deep Whisper Modal -->
+        <div id="deep-whisper-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-magic"></i> Deep Whisper Scan</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">
+                        Deep Whisper utilizes advanced AI to detect non-obvious correlations, asset movement patterns, 
+                        and hidden treasure clusters that only AI can spot. This feature pushes beyond traditional 
+                        boundaries to uncover forgotten digital assets and obscure ownership patterns.
+                    </p>
+                    <div class="whisper-options">
+                        <h4>Scan Configuration</h4>
+                        <label>
+                            <input type="checkbox" id="asset-movement" checked>
+                            Asset Movement Patterns
+                        </label>
+                        <label>
+                            <input type="checkbox" id="ownership-patterns" checked>
+                            Obscure Domain Ownership
+                        </label>
+                        <label>
+                            <input type="checkbox" id="blockchain-links" checked>
+                            Blockchain Cross-linking
+                        </label>
+                        <label>
+                            <input type="checkbox" id="hidden-clusters" checked>
+                            Hidden Asset Clusters
+                        </label>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="execute-whisper" class="btn btn-special">
+                            <i class="fas fa-bolt"></i> Execute Deep Whisper
+                        </button>
+                        <button id="cancel-whisper" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div id="connection-status" class="connection-status">
+            <i class="fas fa-wifi"></i> Connecting...
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDashboard();
+        });
+    </script>
+</body>
+</html>
