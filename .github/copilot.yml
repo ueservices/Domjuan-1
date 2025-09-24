@@ -1,0 +1,67 @@
+# GitHub Copilot Configuration
+# This file configures GitHub Copilot behavior for this repository
+
+# Copilot Chat instructions for AI-assisted development
+instructions: |
+  This repository contains a professional portfolio website with integrated Stripe payment processing.
+  
+  Key considerations when assisting with code:
+  - Security is paramount - never hardcode secrets or API keys
+  - Follow existing patterns for payment processing with Stripe
+  - Maintain PCI compliance best practices
+  - Use environment variables for all configuration
+  - Validate all inputs, especially payment amounts
+  - Implement proper error handling without exposing sensitive data
+  - Follow the existing code style (vanilla JS, Express.js patterns)
+  
+  When suggesting changes:
+  - Test payment flows with Stripe test cards
+  - Ensure HTTPS requirements are met
+  - Validate webhook signature verification
+  - Maintain existing security headers (CSP, CORS)
+  - Consider mobile responsiveness and accessibility
+  
+  Repository structure:
+  - server.js: Main Express server with payment endpoints
+  - script.js: Frontend JavaScript with Stripe Elements integration
+  - index.html: Single-page portfolio with payment modals
+  - styles.css: All styling (no external CSS frameworks)
+
+# File patterns to prioritize for context
+context_files:
+  - "server.js"
+  - "script.js"
+  - "index.html"
+  - ".env.example"
+  - "package.json"
+  - "README.md"
+  - "SECURITY.md"
+
+# Patterns to exclude from suggestions
+exclude_patterns:
+  - "node_modules/"
+  - ".git/"
+  - "*.log"
+  - ".env"
+
+# Language-specific settings
+languages:
+  javascript:
+    style: "existing"
+    security_focus: true
+    payment_processing: true
+  
+  html:
+    accessibility: true
+    responsive: true
+  
+  css:
+    responsive: true
+    performance: true
+
+# Security-focused assistance
+security:
+  payment_processing: true
+  environment_variables: true
+  input_validation: true
+  error_handling: true

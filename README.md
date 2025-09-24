@@ -115,7 +115,46 @@ The website uses Stripe for secure payment processing:
 - Secure payment handling
 - Environment variable protection
 
+### Security Best Practices for Contributors
+
+1. **Never commit secrets**: Use `.env` files locally, environment variables in production
+2. **Validate inputs**: All user inputs, especially payment amounts, must be validated
+3. **Use HTTPS**: Required for payment processing and webhook endpoints
+4. **Follow PCI compliance**: Use Stripe Elements, never store card data
+5. **Audit dependencies**: Run `npm run security-check` regularly
+6. **Code review**: Security-sensitive files require code owner approval
+
+### Automated Security
+
+- **Dependabot**: Automatically updates dependencies and security patches
+- **ESLint Security Plugin**: Detects common security vulnerabilities
+- **GitHub Security Advisories**: Monitors for known vulnerabilities
+- **Branch Protection**: Requires reviews and status checks before merging
+
 ## Development
+
+### GitHub Copilot Agent Integration
+
+This repository is optimized for GitHub Copilot Coding Agent. The agent has been configured with:
+
+#### Agent Configuration
+- **Instructions**: Located in `.github/copilot-instructions.md`
+- **Security Guidelines**: Payment processing and PCI compliance focused
+- **Code Patterns**: Follows existing Express.js and Stripe integration patterns
+- **Context Files**: Prioritizes key files (server.js, script.js, security configs)
+
+#### Working with the Agent
+1. **Code Reviews**: CODEOWNERS file ensures security-sensitive changes are reviewed
+2. **Issue Templates**: Use structured templates for bugs, features, and security issues
+3. **Pull Requests**: Follow the PR template for consistent documentation
+4. **Automated Updates**: Dependabot manages dependency updates safely
+
+#### Agent Guidelines
+- Always use environment variables for sensitive configuration
+- Follow existing payment processing patterns
+- Maintain security headers and validation
+- Test with Stripe test cards in development
+- Validate webhook signatures for production
 
 ### File Structure
 
@@ -136,8 +175,12 @@ The website uses Stripe for secure payment processing:
 
 - `npm start`: Start production server
 - `npm run dev`: Start development server with auto-reload
-- `npm test`: Run tests
-- `npm run build`: Build for production
+- `npm test`: Run linting and security checks
+- `npm run lint`: Run ESLint with auto-fix
+- `npm run lint:check`: Run ESLint without auto-fix
+- `npm run security-check`: Run npm audit for vulnerabilities
+- `npm run validate-env`: Validate required environment variables
+- `npm run build`: Build for production (static site)
 
 ### Customization
 
