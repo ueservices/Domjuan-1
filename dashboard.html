@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Discovery Bot Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <h1>🤖 Domain Discovery Bot Dashboard</h1>
+                <div class="header-controls">
+                    <button id="startBots" class="btn btn-success">Start All Bots</button>
+                    <button id="stopBots" class="btn btn-danger">Stop All Bots</button>
+                    <div class="export-controls">
+                        <button id="exportJson" class="btn btn-secondary">Export JSON</button>
+                        <button id="exportCsv" class="btn btn-secondary">Export CSV</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Stats -->
+        <section class="stats-overview">
+            <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <h3 id="totalDomains">0</h3>
+                    <p>Total Domains Discovered</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3 id="successfulAcquisitions">0</h3>
+                    <p>Successful Acquisitions</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-content">
+                    <h3 id="failedAttempts">0</h3>
+                    <p>Failed Attempts</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏱️</div>
+                <div class="stat-content">
+                    <h3 id="uptime">00:00:00</h3>
+                    <p>System Uptime</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bot Status Cards -->
+        <section class="bot-status-section">
+            <h2>Bot Status</h2>
+            <div class="bot-cards">
+                <div class="bot-card" data-bot="domainHunter">
+                    <div class="bot-header">
+                        <h3>🏹 Domain Hunter</h3>
+                        <span class="status-indicator inactive">Inactive</span>
+                    </div>
+                    <div class="bot-stats">
+                        <div class="stat-row">
+                            <span>Scanned:</span>
+                            <span class="stat-value" data-stat="domainsScanned">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Discovered:</span>
+                            <span class="stat-value" data-stat="domainsDiscovered">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Acquired:</span>
+                            <span class="stat-value" data-stat="domainsAcquired">0</span>
+                        </div>
+                    </div>
+                    <div class="bot-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="bot-message">Ready to hunt premium domains</p>
+                    </div>
+                </div>
+
+                <div class="bot-card" data-bot="assetSeeker">
+                    <div class="bot-header">
+                        <h3>💎 Asset Seeker</h3>
+                        <span class="status-indicator inactive">Inactive</span>
+                    </div>
+                    <div class="bot-stats">
+                        <div class="stat-row">
+                            <span>Scanned:</span>
+                            <span class="stat-value" data-stat="domainsScanned">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Discovered:</span>
+                            <span class="stat-value" data-stat="domainsDiscovered">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Acquired:</span>
+                            <span class="stat-value" data-stat="domainsAcquired">0</span>
+                        </div>
+                    </div>
+                    <div class="bot-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="bot-message">Ready to seek digital assets</p>
+                    </div>
+                </div>
+
+                <div class="bot-card" data-bot="recursiveExplorer">
+                    <div class="bot-header">
+                        <h3>🔍 Recursive Explorer</h3>
+                        <span class="status-indicator inactive">Inactive</span>
+                    </div>
+                    <div class="bot-stats">
+                        <div class="stat-row">
+                            <span>Scanned:</span>
+                            <span class="stat-value" data-stat="domainsScanned">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Discovered:</span>
+                            <span class="stat-value" data-stat="domainsDiscovered">0</span>
+                        </div>
+                        <div class="stat-row">
+                            <span>Acquired:</span>
+                            <span class="stat-value" data-stat="domainsAcquired">0</span>
+                        </div>
+                    </div>
+                    <div class="bot-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p class="bot-message">Ready to explore hidden gems</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="chart-container">
+                <h3>Discovery Timeline</h3>
+                <div id="discoveryChart" class="custom-chart">
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #10b981;"></div>
+                            <span>Domain Hunter</span>
+                            <span id="hunterCount" class="count">0</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #3b82f6;"></div>
+                            <span>Asset Seeker</span>
+                            <span id="seekerCount" class="count">0</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #8b5cf6;"></div>
+                            <span>Recursive Explorer</span>
+                            <span id="explorerCount" class="count">0</span>
+                        </div>
+                    </div>
+                    <div class="timeline-bars">
+                        <div class="timeline-bar">
+                            <div class="bar-segment hunter" id="hunterBar" style="width: 0%"></div>
+                        </div>
+                        <div class="timeline-bar">
+                            <div class="bar-segment seeker" id="seekerBar" style="width: 0%"></div>
+                        </div>
+                        <div class="timeline-bar">
+                            <div class="bar-segment explorer" id="explorerBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>Bot Performance</h3>
+                <div id="performanceChart" class="custom-chart">
+                    <div class="performance-grid">
+                        <div class="performance-card">
+                            <div class="perf-icon">🏹</div>
+                            <div class="perf-stats">
+                                <div class="perf-value" id="hunterSuccess">0%</div>
+                                <div class="perf-label">Success Rate</div>
+                            </div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="perf-icon">💎</div>
+                            <div class="perf-stats">
+                                <div class="perf-value" id="seekerSuccess">0%</div>
+                                <div class="perf-label">Success Rate</div>
+                            </div>
+                        </div>
+                        <div class="performance-card">
+                            <div class="perf-icon">🔍</div>
+                            <div class="perf-stats">
+                                <div class="perf-value" id="explorerSuccess">0%</div>
+                                <div class="perf-label">Success Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filters and Activity Log -->
+        <section class="activity-section">
+            <div class="filters-panel">
+                <h3>Filters</h3>
+                <div class="filter-group">
+                    <label>Bot:</label>
+                    <select id="botFilter">
+                        <option value="all">All Bots</option>
+                        <option value="Domain Hunter">Domain Hunter</option>
+                        <option value="Asset Seeker">Asset Seeker</option>
+                        <option value="Recursive Explorer">Recursive Explorer</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Event Type:</label>
+                    <select id="eventFilter">
+                        <option value="all">All Events</option>
+                        <option value="discovery">Discoveries</option>
+                        <option value="acquisition">Acquisitions</option>
+                        <option value="status">Status Updates</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Asset Type:</label>
+                    <select id="assetFilter">
+                        <option value="all">All Types</option>
+                        <option value="premium">Premium</option>
+                        <option value="asset">Digital Asset</option>
+                        <option value="hidden">Hidden Gem</option>
+                    </select>
+                </div>
+                <button id="clearLog" class="btn btn-warning">Clear Log</button>
+            </div>
+
+            <div class="activity-log">
+                <h3>Real-time Activity Log</h3>
+                <div id="logContainer" class="log-container">
+                    <div class="log-entry system">
+                        <span class="timestamp">System</span>
+                        <span class="message">Dashboard initialized. Ready to start bot operations.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
