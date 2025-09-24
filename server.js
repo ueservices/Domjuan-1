@@ -3,10 +3,18 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_...')
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
+const http = require('http');
+const socketIo = require('socket.io');
+const BotManager = require('./bots/botManager');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
+
+// Initialize bot manager
+const botManager = new BotManager();
 
 // Middleware
 app.use(helmet({
@@ -47,6 +55,11 @@ const SERVICES = {
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Dashboard route
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
 // Serve configuration
@@ -139,6 +152,53 @@ app.get('/api/services/:serviceId', (req, res) => {
     res.json(service);
 });
 
+// API endpoints for bot data
+app.get('/api/bots/stats', (req, res) => {
+    res.json(botManager.getAllStats());
+});
+
+app.get('/api/bots/:botName/status', (req, res) => {
+    const status = botManager.getBotStatus(req.params.botName);
+    if (!status) {
+        return res.status(404).json({ error: 'Bot not found' });
+    }
+    res.json(status);
+});
+
+app.post('/api/bots/start', (req, res) => {
+    botManager.startAllBots();
+    res.json({ message: 'All bots started', timestamp: new Date() });
+});
+
+app.post('/api/bots/stop', (req, res) => {
+    botManager.stopAllBots();
+    res.json({ message: 'All bots stopped', timestamp: new Date() });
+});
+
+// Export data endpoint
+app.get('/api/export/:format', (req, res) => {
+    const { format } = req.params;
+    const stats = botManager.getAllStats();
+    
+    if (format === 'json') {
+        res.setHeader('Content-Disposition', 'attachment; filename=bot-data.json');
+        res.setHeader('Content-Type', 'application/json');
+        res.json(stats);
+    } else if (format === 'csv') {
+        res.setHeader('Content-Disposition', 'attachment; filename=bot-data.csv');
+        res.setHeader('Content-Type', 'text/csv');
+        
+        // Generate CSV data
+        let csv = 'Bot,Status,Domains Scanned,Domains Discovered,Domains Acquired,Errors\n';
+        stats.bots.forEach(bot => {
+            csv += `${bot.name},${bot.status.isActive ? 'Active' : 'Inactive'},${bot.status.stats.domainsScanned},${bot.status.stats.domainsDiscovered},${bot.status.stats.domainsAcquired},${bot.status.stats.errors}\n`;
+        });
+        res.send(csv);
+    } else {
+        res.status(400).json({ error: 'Invalid format. Use json or csv' });
+    }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -150,9 +210,51 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
 });
 
-app.listen(PORT, () => {
+// WebSocket connection handling
+io.on('connection', (socket) => {
+    console.log('Client connected to dashboard');
+    
+    // Send current stats on connection
+    socket.emit('stats', botManager.getAllStats());
+    
+    socket.on('startBots', () => {
+        botManager.startAllBots();
+    });
+    
+    socket.on('stopBots', () => {
+        botManager.stopAllBots();
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Client disconnected from dashboard');
+    });
+});
+
+// Bot event handlers for real-time updates
+botManager.on('discovery', (data) => {
+    io.emit('discovery', data);
+});
+
+botManager.on('acquisition', (data) => {
+    io.emit('acquisition', data);
+});
+
+botManager.on('status', (data) => {
+    io.emit('status', data);
+});
+
+botManager.on('allBotsStarted', (data) => {
+    io.emit('allBotsStarted', data);
+});
+
+botManager.on('allBotsStopped', (data) => {
+    io.emit('allBotsStopped', data);
+});
+
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Portfolio available at http://localhost:${PORT}`);
+    console.log(`Bot Dashboard available at http://localhost:${PORT}/dashboard`);
 });
 
 module.exports = app;
