@@ -115,9 +115,9 @@ function openPaymentModal(service, price) {
     currentPrice = parseInt(price);
     
     const serviceNames = {
-        'website': 'Website Development',
-        'ecommerce': 'E-commerce Solutions',
-        'consultation': 'Consultation'
+        'domain-bot': 'Autonomous Domain Discovery Bot',
+        'custom-scan': 'Custom Domain Scanning',
+        'asset-analysis': 'Digital Asset Analysis'
     };
     
     const serviceName = serviceNames[service] || service;
@@ -261,3 +261,101 @@ function trackEvent(eventName, eventData) {
     console.log('Event:', eventName, eventData);
     // Integrate with your analytics service (Google Analytics, etc.)
 }
+
+// Bot control functions
+async function checkBotStatus() {
+    try {
+        const response = await fetch('/api/bot/status');
+        const data = await response.json();
+        displayBotStatus(data);
+    } catch (error) {
+        console.error('Failed to get bot status:', error);
+        displayBotStatus({ error: 'Failed to connect to bot' });
+    }
+}
+
+async function startBot() {
+    try {
+        const response = await fetch('/api/bot/start', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            alert('Bot started successfully!');
+            checkBotStatus();
+        } else {
+            alert('Failed to start bot: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Failed to start bot:', error);
+        alert('Failed to start bot');
+    }
+}
+
+async function stopBot() {
+    try {
+        const response = await fetch('/api/bot/stop', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            alert('Bot stopped successfully!');
+            checkBotStatus();
+        } else {
+            alert('Failed to stop bot: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Failed to stop bot:', error);
+        alert('Failed to stop bot');
+    }
+}
+
+async function startManualScan() {
+    try {
+        const response = await fetch('/api/bot/scan', { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+            alert('Manual scan initiated!');
+            checkBotStatus();
+        } else {
+            alert('Failed to start scan: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Failed to start scan:', error);
+        alert('Failed to start scan');
+    }
+}
+
+function displayBotStatus(status) {
+    const statusDiv = document.getElementById('bot-status');
+    if (!statusDiv) return;
+
+    if (status.error) {
+        statusDiv.innerHTML = `<p class="error">Error: ${status.error}</p>`;
+        return;
+    }
+
+    statusDiv.innerHTML = `
+        <div class="status-info">
+            <h3>Bot Status</h3>
+            <p><strong>Running:</strong> ${status.isRunning ? 'Yes' : 'No'}</p>
+            <p><strong>Session ID:</strong> ${status.sessionId || 'N/A'}</p>
+            <p><strong>Domains Discovered:</strong> ${status.discoveries?.domains || 0}</p>
+            <p><strong>Assets Found:</strong> ${status.discoveries?.assets || 0}</p>
+            <p><strong>Currencies Found:</strong> ${status.discoveries?.currencies || 0}</p>
+            <p><strong>Last Run:</strong> ${status.lastRun || 'Never'}</p>
+        </div>
+    `;
+}
+
+// Initialize bot controls when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Existing initialization code...
+    
+    // Add bot control event listeners
+    const botStatusBtn = document.getElementById('bot-status-btn');
+    const botStartBtn = document.getElementById('bot-start-btn');
+    const botStopBtn = document.getElementById('bot-stop-btn');
+    const botScanBtn = document.getElementById('bot-scan-btn');
+
+    if (botStatusBtn) botStatusBtn.addEventListener('click', checkBotStatus);
+    if (botStartBtn) botStartBtn.addEventListener('click', startBot);
+    if (botStopBtn) botStopBtn.addEventListener('click', stopBot);
+    if (botScanBtn) botScanBtn.addEventListener('click', startManualScan);
+});

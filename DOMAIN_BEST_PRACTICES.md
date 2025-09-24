@@ -1,19 +1,73 @@
-# Domain Acquisition & Transfer Best Practices
+# Autonomous Domain Discovery Bot - Best Practices
 
-## 1. Bot Setup & Task Management
-- **Assign each bot a unique role:** nested, hidden, unexplored, unseen, unfound.
-- **Automate search & acquisition:** Bots should scan registries/marketplaces for domains that fit their profile.
-- **Rotate bot credentials and limit permissions for security.**
+## 1. Bot Setup & Operation
 
-## 2. Domain Validation
-- **Check domain status with official registries** (WHOIS, ICANN, registrar APIs).
-- **Verify legitimacy:** Ensure domains are not blacklisted, compromised, or under dispute.
-- **Automate validation:** Use scripts to confirm domain status before acquisition.
+### Bot Roles & Specialization
+- **Nested Bot**: Discovers subdomains and nested domain structures
+- **Hidden Bot**: Finds concealed and private domains through advanced techniques  
+- **Unexplored Bot**: Targets virgin territories and unexplored domain spaces
+- **Unseen Bot**: Focuses on invisible assets and dark web domains
+- **Unfound Bot**: Specializes in forgotten and abandoned digital properties
 
-## 3. Payment Processing
-- **Remove all non-domain payment features.**
-- **Automate payments for domain purchase only.**
-- **Log all transactions for auditing and reinvest all funds into domain acquisition.**
+### Automated Discovery & Acquisition
+- **Multi-Registrar Scanning**: Simultaneous scanning across GoDaddy, Namecheap, Spaceship, Afternic
+- **AI-Driven Valuation**: Machine learning algorithms for domain value prediction
+- **Recursive Depth Scanning**: Up to 5 levels deep with configurable parameters
+- **Real-time Acquisition**: Automatic bidding and purchasing based on strategy algorithms
+
+## 2. Advanced Scanning Techniques
+
+### DNS & Zone File Analysis
+- **Brute-force DNS enumeration** with custom wordlists
+- **Zone file transfer attacks** (where legally permitted)
+- **Historical DNS record analysis** using archive services
+- **Reverse DNS lookups** for discovering related domains
+
+### Deep Web & Archive Mining  
+- **Wayback Machine analysis** for historical domain data
+- **Certificate transparency logs** scanning for subdomain discovery  
+- **GitHub/GitLab repository mining** for hardcoded domains
+- **Social media and forum analysis** for mentioned domains
+
+### Asset-Specific Discovery
+- **Cryptocurrency wallet scanning** via blockchain explorers
+- **NFT marketplace analysis** across OpenSea, Rarible, Foundation
+- **DeFi protocol identification** through smart contract analysis
+- **Blockchain domain scanning** (.crypto, .eth, .nft, .dao)
+
+## 3. Intelligent Acquisition Strategies
+
+### Multi-Strategy Approach
+- **Direct Registration**: Immediate registration of available domains
+- **Auction Participation**: Automated bidding with maximum bid limits
+- **Backorder Services**: Queue positioning for expiring domains  
+- **Negotiation Bots**: Automated contact and offer systems for owned domains
+
+### Budget Management
+- **Dynamic Pricing Models**: Real-time market analysis for bid optimization
+- **ROI Calculation**: Expected return on investment for each acquisition
+- **Risk Assessment**: Domain legitimacy and legal compliance checking
+- **Cost Distribution**: Balanced spending across multiple registrars
+
+## 4. Digital Asset Integration
+
+### Cryptocurrency Discovery
+- **Wallet Detection**: Scanning for crypto wallet integrations on discovered domains
+- **DeFi Protocol Analysis**: Identifying decentralized finance platforms and tokens
+- **Mining Pool Discovery**: Finding cryptocurrency mining operations
+- **Exchange Platform Identification**: Locating crypto trading platforms
+
+### NFT & Collectibles
+- **Collection Analysis**: Evaluating NFT projects associated with domains
+- **Marketplace Integration**: Cross-referencing with major NFT platforms
+- **Rarity Assessment**: AI-powered evaluation of digital collectible value
+- **Creator Verification**: Authenticity checking for digital artists and projects
+
+### Blockchain Assets
+- **Smart Contract Analysis**: Scanning for token contracts and DApps
+- **Domain Tokenization**: Converting traditional domains to blockchain assets
+- **Cross-chain Analysis**: Multi-blockchain asset discovery
+- **Metadata Extraction**: Comprehensive asset information gathering
 
 ## 4. Secrets & Auth Codes
 - **Obtain auth/transfer codes for each acquired domain.**

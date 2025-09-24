@@ -5,8 +5,15 @@ const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config();
 
+// Import autonomous domain bot
+const AutonomousDomainBot = require('./bot/core');
+const botConfig = require('./bot/config');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize the autonomous domain bot
+const bot = new AutonomousDomainBot(botConfig.bot);
 
 // Middleware
 app.use(helmet({
@@ -25,22 +32,22 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// Service pricing configuration
+// Service pricing configuration - Now focused on domain bot services
 const SERVICES = {
-    website: {
-        name: 'Website Development',
+    'domain-bot': {
+        name: 'Autonomous Domain Discovery Bot',
         price: 50000, // $500.00 in cents
-        description: 'Custom website development'
+        description: 'Full autonomous domain and digital asset discovery service'
     },
-    ecommerce: {
-        name: 'E-commerce Solutions',
+    'custom-scan': {
+        name: 'Custom Domain Scanning',
         price: 120000, // $1,200.00 in cents
-        description: 'Complete e-commerce platform'
+        description: 'Targeted domain scanning with custom parameters'
     },
-    consultation: {
-        name: 'Consultation',
+    'asset-analysis': {
+        name: 'Digital Asset Analysis',
         price: 10000, // $100.00 in cents
-        description: 'One-on-one consultation session'
+        description: 'In-depth analysis of discovered digital assets'
     }
 };
 
@@ -55,6 +62,48 @@ app.get('/config.js', (req, res) => {
     res.send(`
         window.STRIPE_PUBLISHABLE_KEY = '${process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890'}';
     `);
+});
+
+// Bot API endpoints
+app.get('/api/bot/status', (req, res) => {
+    res.json(bot.getStatus());
+});
+
+app.post('/api/bot/start', async (req, res) => {
+    try {
+        await bot.start();
+        res.json({ success: true, message: 'Bot started successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/bot/stop', async (req, res) => {
+    try {
+        await bot.stop();
+        res.json({ success: true, message: 'Bot stopped successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/bot/scan', async (req, res) => {
+    try {
+        await bot.runDiscoverySession();
+        res.json({ success: true, message: 'Discovery session initiated' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/bot/discoveries', (req, res) => {
+    const status = bot.getStatus();
+    res.json({
+        domains: Array.from(bot.discoveries?.domains?.values() || []),
+        assets: Array.from(bot.discoveries?.assets?.values() || []),
+        currencies: Array.from(bot.discoveries?.currencies?.values() || []),
+        summary: status.discoveries
+    });
 });
 
 // Health check endpoint
@@ -150,9 +199,19 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
-    console.log(`Portfolio available at http://localhost:${PORT}`);
+    console.log(`Autonomous Domain Discovery Bot available at http://localhost:${PORT}`);
+    
+    // Start the bot automatically in production
+    if (process.env.NODE_ENV === 'production' && process.env.AUTO_START_BOT === 'true') {
+        try {
+            await bot.start();
+            console.log('Bot started automatically');
+        } catch (error) {
+            console.error('Failed to auto-start bot:', error.message);
+        }
+    }
 });
 
 module.exports = app;
