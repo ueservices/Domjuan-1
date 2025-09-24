@@ -1,32 +1,29 @@
-# Portfolio Website with Payment Processing
+# Domain Discovery Bot System with Real-time Dashboard
 
-A professional portfolio website with integrated payment processing for services.
+An advanced autonomous domain discovery system featuring three specialized bots with a comprehensive real-time monitoring dashboard.
 
-## Features
+## 🤖 Bot System Features
 
-- 🎨 Modern, responsive design
-- 💳 Stripe payment integration
-- 🔒 Secure payment processing
-- 📱 Mobile-friendly interface
-- ⚡ Fast loading times
-- 🚀 Production-ready deployment
+- **Domain Hunter** - Specializes in premium domain discovery
+- **Asset Seeker** - Focuses on digital asset domains (NFT, DeFi, Gaming, SaaS)
+- **Recursive Explorer** - Discovers hidden gem domains with deep search capabilities
+- **Real-time Dashboard** - Live monitoring, filtering, and export capabilities
+- **WebSocket Integration** - Instant updates without page refresh
 
-## Services Offered
+## 📊 Dashboard Capabilities
 
-1. **Website Development** - $500
-   - Custom websites built with modern technologies
-   
-2. **E-commerce Solutions** - $1,200
-   - Complete online store setup with payment processing
-   
-3. **Consultation** - $100
-   - One-on-one consultation for your project
+- 🔴 **Live Bot Monitoring** - Real-time status and progress tracking
+- 📈 **Interactive Visualizations** - Discovery timelines and performance metrics
+- 🔍 **Advanced Filtering** - Filter by bot, event type, and asset type
+- 📁 **Data Export** - JSON and CSV export functionality
+- ⏱️ **Real-time Activity Log** - Timestamped activity tracking
+- 🎨 **Modern UI** - Glassmorphism design with responsive layout
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js (version 14 or higher)
+- Node.js (version 18 or higher)
 - npm or yarn
 - Stripe account for payment processing
 
@@ -43,18 +40,48 @@ cd Domjuan-1
 npm install
 ```
 
-3. Set up environment variables:
+3. Start the server:
 ```bash
-cp .env.example .env
-# Edit .env with your Stripe keys
+npm start
 ```
 
-4. Start the development server:
-```bash
-npm run dev
-```
+4. Access the applications:
+   - **Bot Dashboard**: http://localhost:3000/dashboard
+   - Portfolio Site: http://localhost:3000
 
-5. Visit `http://localhost:3000` to view the portfolio
+## 🎯 Using the Bot Dashboard
+
+### Starting Bot Operations
+1. Navigate to http://localhost:3000/dashboard
+2. Click **"Start All Bots"** to begin domain discovery
+3. Monitor real-time updates in the activity log
+4. Watch live statistics and visualizations
+
+### Dashboard Features
+- **Real-time Statistics**: Total domains discovered, successful acquisitions, system uptime
+- **Bot Status Cards**: Individual bot monitoring with progress indicators
+- **Discovery Timeline**: Visual progress bars showing bot performance
+- **Activity Filtering**: Filter by bot, event type, or asset type
+- **Data Export**: Download complete bot data in JSON or CSV format
+
+### Bot Specializations
+- **🏹 Domain Hunter**: Premium domains (3s intervals, depth 3)
+- **💎 Asset Seeker**: Digital assets (4s intervals, depth 2)  
+- **🔍 Recursive Explorer**: Hidden gems (6s intervals, depth 5)
+
+## 📁 Project Structure
+
+```
+├── bots/
+│   └── botManager.js      # Bot management system
+├── dashboard.html         # Dashboard interface
+├── dashboard.css          # Dashboard styling
+├── dashboard.js          # Dashboard JavaScript
+├── server.js             # Express server with WebSocket
+├── index.html            # Portfolio homepage
+├── DASHBOARD_DOCUMENTATION.md  # Comprehensive dashboard docs
+└── DOMAIN_BEST_PRACTICES.md   # Domain acquisition guidelines
+```
 
 ## Production Deployment
 
