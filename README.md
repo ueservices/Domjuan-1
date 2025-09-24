@@ -1,34 +1,63 @@
-# Portfolio Website with Payment Processing
+# Domjuan-1 - Autonomous Domain Discovery Bot
 
-A professional portfolio website with integrated payment processing for services.
+An advanced AI-powered system for discovering and acquiring hidden digital domains, cryptocurrencies, NFTs, and rare digital assets with unmatched depth and precision.
 
-## Features
+## 🚀 Features
 
-- 🎨 Modern, responsive design
-- 💳 Stripe payment integration
-- 🔒 Secure payment processing
-- 📱 Mobile-friendly interface
-- ⚡ Fast loading times
-- 🚀 Production-ready deployment
+- **🔍 Deep Domain Scanning**: Multi-layered recursive scanning with DNS/WHOIS analysis and zone file brute-forcing
+- **💎 Digital Asset Discovery**: Autonomous discovery of cryptocurrencies, NFTs, and rare digital collectibles  
+- **🤖 AI-Powered Analysis**: Advanced algorithms for pattern recognition and value prediction
+- **🏢 Multi-Registrar Support**: Integration with GoDaddy, Namecheap, Spaceship, Afternic, and other major platforms
+- **🔒 Secure Export**: Encrypted data packaging with full metadata for bulk transfer and acquisition
+- **⚡ Real-time Monitoring**: Live bot status and discovery tracking via web interface
+- **🎯 Autonomous Acquisition**: Automated domain purchasing with intelligent strategy selection
 
-## Services Offered
+## 🎯 Discovery Capabilities
 
-1. **Website Development** - $500
-   - Custom websites built with modern technologies
-   
-2. **E-commerce Solutions** - $1,200
-   - Complete online store setup with payment processing
-   
-3. **Consultation** - $100
-   - One-on-one consultation for your project
+### Domain Discovery
+- Nested, hidden, and forgotten domains across all major registrars
+- AI-powered domain valuation and market analysis
+- Recursive subdomain enumeration and zone file analysis
+- Historical domain data mining and archival research
 
-## Quick Start
+### Digital Asset Discovery  
+- Cryptocurrency wallet detection and balance analysis  
+- NFT collection discovery and valuation
+- DeFi protocol identification and TVL assessment
+- Blockchain domain (.crypto, .eth, .nft) scanning
+- Rare digital collectible identification
+
+### Autonomous Acquisition
+- Intelligent registrar selection based on cost and availability
+- Multi-strategy acquisition (direct, auction, backorder, negotiation)
+- Budget management and spending optimization
+- Secure credential storage and transaction logging
+
+## 🛠 Services Offered
+
+1. **Full Autonomous Bot** - $500
+   - Complete autonomous operation with 24/7 scanning
+   - Multi-registrar integration and acquisition
+   - Cryptocurrency & NFT discovery
+   - Secure encrypted export package
+
+2. **Custom Domain Scanning** - $1,200  
+   - Targeted deep scanning with custom parameters
+   - Priority acquisition assistance
+   - Historical domain analysis and portfolio mining
+
+3. **Digital Asset Analysis** - $100
+   - In-depth cryptocurrency and NFT analysis
+   - DeFi protocol assessment and valuation
+   - Detailed asset reports and market insights
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js (version 14 or higher)
+- Node.js (version 18 or higher)
 - npm or yarn
-- Stripe account for payment processing
+- API keys for registrars (optional for basic scanning)
 
 ### Installation
 
@@ -46,15 +75,218 @@ npm install
 3. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your Stripe keys
+# Edit .env with your configuration
 ```
 
-4. Start the development server:
+4. Create bot directories:
+```bash
+mkdir -p bot/output bot/data
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-5. Visit `http://localhost:3000` to view the portfolio
+6. Visit `http://localhost:3000` to access the bot interface
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+```env
+# Core Configuration
+NODE_ENV=development
+AUTO_START_BOT=false
+BOT_LOG_LEVEL=info
+BOT_MAX_DEPTH=5
+BOT_MAX_ACQUISITION_COST=1000
+
+# Registrar API Keys
+GODADDY_API_KEY=your_godaddy_api_key
+GODADDY_API_SECRET=your_godaddy_api_secret
+NAMECHEAP_API_KEY=your_namecheap_api_key
+SPACESHIP_API_KEY=your_spaceship_api_key
+AFTERNIC_API_KEY=your_afternic_api_key
+
+# Security
+ENCRYPTION_KEY=your_32_character_encryption_key
+```
+
+### Bot Configuration
+
+Edit `bot/config.js` to customize:
+- Scanning depth and intervals
+- Asset discovery parameters  
+- Registrar priorities and budgets
+- Security and export settings
+
+## 🎮 Usage
+
+### Web Interface
+
+1. **Monitor Bot Status**: Check running status and discovery statistics
+2. **Control Operations**: Start/stop bot and initiate manual scans
+3. **Purchase Services**: Use integrated payment processing for premium features
+
+### API Endpoints
+
+```bash
+# Get bot status
+GET /api/bot/status
+
+# Start/stop bot
+POST /api/bot/start
+POST /api/bot/stop
+
+# Manual scan
+POST /api/bot/scan
+
+# Get discoveries
+GET /api/bot/discoveries
+```
+
+### Command Line
+
+```bash
+# Start bot programmatically
+node -e "
+const Bot = require('./bot/core');
+const config = require('./bot/config');
+const bot = new Bot(config.bot);
+bot.start();
+"
+```
+
+## 🏗 Architecture
+
+### Core Components
+
+- **`bot/core.js`**: Main bot orchestration and session management
+- **`bot/scanner.js`**: Domain scanning and DNS analysis engine  
+- **`bot/assets.js`**: Digital asset discovery and valuation
+- **`bot/registrars.js`**: Multi-registrar integration and acquisition
+- **`bot/exporter.js`**: Secure data export and packaging
+- **`bot/config.js`**: Configuration management
+
+### Data Flow
+
+1. **Discovery Session**: Bot initiates recursive domain scanning
+2. **Asset Analysis**: Discovered domains analyzed for digital assets
+3. **Acquisition**: Promising domains automatically acquired via registrars
+4. **Export**: Results packaged with encryption for secure transfer
+
+## 🔐 Security Features
+
+- **AES-256-GCM Encryption**: All exported data encrypted with rotating keys
+- **Secure Credential Storage**: API keys and auth codes encrypted at rest
+- **Audit Logging**: Comprehensive logs for all bot operations
+- **Rate Limiting**: API protection against abuse
+- **Input Validation**: All domain and asset data validated
+- **HTTPS-Only**: Secure communication for all registrar APIs
+
+## 📊 Export Formats
+
+### CSV Export
+- Domains with metadata, acquisition details, and valuation
+- Digital assets with blockchain information and estimated values
+- Cryptocurrencies with wallet data and holdings
+
+### JSON Export  
+- Complete structured data with full metadata
+- Nested relationships between domains and assets
+- Session information and discovery analytics
+
+### Secure Package
+- AES-encrypted bundle with all discoveries
+- Separate key file for maximum security  
+- Integrity verification with SHA-256 hashes
+- Comprehensive README for decryption
+
+## 🚨 Production Deployment
+
+### Environment Setup
+
+```bash
+# Set production environment
+export NODE_ENV=production
+export AUTO_START_BOT=true
+
+# Configure registrar credentials
+export GODADDY_API_KEY="your_production_key"
+export GODADDY_API_SECRET="your_production_secret"
+# ... additional registrar keys
+
+# Security settings
+export ENCRYPTION_KEY="your_32_character_production_key"
+export BOT_MAX_ACQUISITION_COST=5000
+```
+
+### Docker Deployment
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Process Management
+
+```bash
+# Using PM2
+npm install -g pm2
+pm2 start server.js --name domjuan-bot
+pm2 startup
+pm2 save
+```
+
+## 📈 Monitoring & Analytics
+
+### Bot Metrics
+- Domains discovered per session
+- Asset discovery success rates
+- Acquisition costs and ROI
+- Registrar performance comparison
+
+### Export Analytics
+- Data export frequency and volume
+- Encryption key rotation tracking
+- Package integrity verification
+
+## 🛡 Best Practices
+
+### Security
+1. **Rotate encryption keys** every 30 days
+2. **Store registrar API keys** in secure vaults
+3. **Use HTTPS-only** for all communications
+4. **Monitor bot logs** for suspicious activity
+5. **Backup encrypted packages** to multiple locations
+
+### Operations
+1. **Test in sandbox mode** before production
+2. **Set reasonable acquisition budgets** per domain
+3. **Monitor registrar API limits** and costs
+4. **Regular bot health checks** and status monitoring
+5. **Audit discovered assets** before bulk transfers
+
+## 🤝 Support
+
+For technical support and questions:
+- **Email**: contact@domjuan.com
+- **Documentation**: See `DOMAIN_BEST_PRACTICES.md` for detailed workflows
+- **Security**: See `SECURITY.md` for security guidelines
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+---
+
+**⚠️ Important**: This bot operates with real registrar APIs and can make actual domain purchases. Always test in sandbox/development mode first and set appropriate budget limits.
 
 ## Production Deployment
 
