@@ -292,6 +292,75 @@ h2 {
     cursor: not-allowed;
 }
 
+/* Features Grid */
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.feature h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: #1e40af;
+}
+
+/* Bot Controls */
+.bot-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.control-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+
+.control-btn:hover {
+    background: #1d4ed8;
+}
+
+.status-display {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.status-info h3 {
+    color: #1e40af;
+    margin-bottom: 1rem;
+}
+
+.status-info p {
+    margin-bottom: 0.5rem;
+}
+
+.error {
+    color: #dc2626;
+    font-weight: 500;
+}
+
 /* Footer */
 footer {
     background: #1f2937;
