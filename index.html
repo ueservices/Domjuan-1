@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portfolio - Professional Services</title>
+    <title>Domjuan - Domain Acquisition Platform</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="/config.js"></script>
-    <script src="https://js.stripe.com/v3/"></script>
-    <!-- Google Fonts fallback removed to prevent loading issues -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -21,12 +18,12 @@
     <header>
         <nav>
             <div class="logo">
-                <h1>Portfolio</h1>
+                <h1>🤖 Domjuan</h1>
             </div>
             <ul class="nav-links">
                 <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#services">Services</a></li>
+                <li><a href="#bots">Bots</a></li>
+                <li><a href="#search">Domain Search</a></li>
                 <li><a href="#portfolio">Portfolio</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
@@ -36,98 +33,126 @@
     <main>
         <section id="home" class="hero">
             <div class="hero-content">
-                <h1>Professional Web Development Services</h1>
-                <p>Creating modern, responsive, and user-friendly web solutions for your business</p>
-                <a href="#services" class="cta-button">View Services</a>
+                <h1>Automated Domain Acquisition Platform</h1>
+                <p>Deploy intelligent bots to discover, validate, and acquire premium domain assets with digital currency payments</p>
+                <a href="#bots" class="cta-button">Launch Bots</a>
             </div>
         </section>
 
-        <section id="about" class="about">
+        <section id="bots" class="bots">
             <div class="container">
-                <h2>About Me</h2>
-                <p>I'm a professional web developer with expertise in modern technologies and a passion for creating exceptional digital experiences.</p>
+                <h2>Bot Fleet Management</h2>
+                <div class="bots-grid" id="bots-grid">
+                    <!-- Bot cards will be loaded here -->
+                </div>
             </div>
         </section>
 
-        <section id="services" class="services">
+        <section id="search" class="search">
             <div class="container">
-                <h2>Services</h2>
-                <div class="services-grid">
-                    <div class="service-card">
-                        <h3>Website Development</h3>
-                        <p>Custom websites built with modern technologies</p>
-                        <div class="price">$500</div>
-                        <button class="buy-button" data-service="website" data-price="50000">Buy Now</button>
-                    </div>
-                    <div class="service-card">
-                        <h3>E-commerce Solutions</h3>
-                        <p>Complete online store setup with payment processing</p>
-                        <div class="price">$1,200</div>
-                        <button class="buy-button" data-service="ecommerce" data-price="120000">Buy Now</button>
-                    </div>
-                    <div class="service-card">
-                        <h3>Consultation</h3>
-                        <p>One-on-one consultation for your project</p>
-                        <div class="price">$100</div>
-                        <button class="buy-button" data-service="consultation" data-price="10000">Buy Now</button>
+                <h2>Domain Search & Discovery</h2>
+                <div class="search-form">
+                    <div class="search-inputs">
+                        <input type="text" id="domain-query" placeholder="Enter domain keyword or query">
+                        <select id="bot-selector">
+                            <option value="">Select Bot</option>
+                        </select>
+                        <button id="search-btn" class="search-button">Search Domains</button>
                     </div>
                 </div>
+                <div id="search-results" class="search-results"></div>
             </div>
         </section>
 
         <section id="portfolio" class="portfolio">
             <div class="container">
-                <h2>Portfolio</h2>
-                <div class="portfolio-grid">
-                    <div class="portfolio-item">
-                        <h3>E-commerce Platform</h3>
-                        <p>Modern online store with payment integration</p>
+                <h2>Domain Portfolio</h2>
+                <div class="portfolio-controls">
+                    <button id="refresh-portfolio" class="refresh-btn">Refresh Portfolio</button>
+                    <button id="export-portfolio" class="export-btn">Export CSV</button>
+                </div>
+                <div id="portfolio-stats" class="portfolio-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="total-domains">0</span>
+                        <span class="stat-label">Total Domains</span>
                     </div>
-                    <div class="portfolio-item">
-                        <h3>Corporate Website</h3>
-                        <p>Professional company website with CMS</p>
+                    <div class="stat-item">
+                        <span class="stat-value" id="active-bots">5</span>
+                        <span class="stat-label">Active Bots</span>
                     </div>
-                    <div class="portfolio-item">
-                        <h3>Mobile App</h3>
-                        <p>Cross-platform mobile application</p>
-                    </div>
+                </div>
+                <div id="portfolio-table" class="portfolio-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Domain</th>
+                                <th>Bot</th>
+                                <th>Status</th>
+                                <th>Auth Code</th>
+                                <th>Acquired</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-tbody">
+                            <!-- Portfolio entries will be loaded here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
 
         <section id="contact" class="contact">
             <div class="container">
-                <h2>Contact</h2>
-                <p>Ready to start your project? Get in touch!</p>
+                <h2>Contact & Support</h2>
+                <p>Domain acquisition platform support and inquiries</p>
                 <div class="contact-info">
-                    <p>Email: contact@portfolio.com</p>
-                    <p>Phone: (555) 123-4567</p>
+                    <p>Email: support@domjuan.com</p>
+                    <p>Bot Status: All systems operational</p>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- Payment Modal -->
-    <div id="payment-modal" class="modal">
+    <!-- Domain Search Modal -->
+    <div id="domain-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>Purchase Service</h2>
-            <div id="service-details"></div>
-            <form id="payment-form">
-                <div id="card-element">
-                    <!-- Stripe Elements will create form elements here -->
+            <h2>Domain Details</h2>
+            <div id="domain-details"></div>
+            <div class="modal-actions">
+                <button id="validate-domain" class="validate-btn">Validate Domain</button>
+                <button id="acquire-domain" class="acquire-btn">Acquire Domain</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acquisition Modal -->
+    <div id="acquisition-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Acquire Domain</h2>
+            <div id="acquisition-form">
+                <input type="text" id="auth-code" placeholder="Auth/Transfer Code (optional)">
+                <textarea id="acquisition-notes" placeholder="Notes"></textarea>
+                <div class="crypto-payment">
+                    <h3>Digital Currency Payment</h3>
+                    <select id="crypto-currency">
+                        <option value="BTC">Bitcoin (BTC)</option>
+                        <option value="ETH">Ethereum (ETH)</option>
+                        <option value="LTC">Litecoin (LTC)</option>
+                    </select>
+                    <div class="payment-amount" id="payment-amount">
+                        <!-- Payment amount will be calculated here -->
+                    </div>
                 </div>
-                <div id="card-errors" role="alert"></div>
-                <button type="submit" id="submit-payment">
-                    <span id="button-text">Pay Now</span>
-                </button>
-            </form>
+                <button id="confirm-acquisition" class="confirm-btn">Confirm Acquisition</button>
+            </div>
         </div>
     </div>
 
     <footer>
         <div class="container">
-            <p>&copy; 2024 Portfolio. All rights reserved.</p>
+            <p>&copy; 2024 Domjuan. Advanced Domain Acquisition Platform. All rights reserved.</p>
         </div>
     </footer>
 

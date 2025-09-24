@@ -1,34 +1,49 @@
-# Portfolio Website with Payment Processing
+# Domjuan - Domain Acquisition Platform
 
-A professional portfolio website with integrated payment processing for services.
+An automated domain acquisition platform with intelligent bot fleet management and digital currency payments.
 
 ## Features
 
-- 🎨 Modern, responsive design
-- 💳 Stripe payment integration
-- 🔒 Secure payment processing
-- 📱 Mobile-friendly interface
-- ⚡ Fast loading times
-- 🚀 Production-ready deployment
+- **5 Specialized Bots**: Nested, Hidden, Unexplored, Unseen, and Unfound domain discovery bots
+- **Domain Search & Validation**: Real-time WHOIS lookup and domain availability checking
+- **Digital Currency Payments**: Bitcoin, Ethereum, and Litecoin payment support
+- **Portfolio Management**: Secure storage and management of acquired domains
+- **CSV Export**: Bulk export of domain portfolios with auth codes
+- **Bot Fleet Management**: Monitor and control automated domain acquisition bots
 
-## Services Offered
+## Bot Roles
 
-1. **Website Development** - $500
-   - Custom websites built with modern technologies
-   
-2. **E-commerce Solutions** - $1,200
-   - Complete online store setup with payment processing
-   
-3. **Consultation** - $100
-   - One-on-one consultation for your project
+### Nested Bot
+- **Role**: nested
+- **Mission**: Finds nested and hierarchical domain opportunities
+- **Focus**: Sub-domain potential and organizational structures
+
+### Hidden Bot  
+- **Role**: hidden
+- **Mission**: Discovers hidden gem domains with untapped potential
+- **Focus**: Undervalued assets with strong SEO potential
+
+### Unexplored Bot
+- **Role**: unexplored  
+- **Mission**: Searches for unexplored domain territories
+- **Focus**: New market segments and emerging trends
+
+### Unseen Bot
+- **Role**: unseen
+- **Mission**: Locates unseen domain assets and opportunities
+- **Focus**: Overlooked premium domains
+
+### Unfound Bot
+- **Role**: unfound
+- **Mission**: Tracks down unfound and rare domain assets
+- **Focus**: Rare and premium domain discoveries
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js (version 14 or higher)
+- Node.js (version 18 or higher)
 - npm or yarn
-- Stripe account for payment processing
 
 ### Installation
 
@@ -46,89 +61,78 @@ npm install
 3. Set up environment variables:
 ```bash
 cp .env.example .env
-# Edit .env with your Stripe keys
+# Edit .env with your configuration
 ```
 
-4. Start the development server:
+4. Start the platform:
 ```bash
-npm run dev
+npm start
 ```
 
-5. Visit `http://localhost:3000` to view the portfolio
+5. Visit `http://localhost:3000` to access the domain acquisition platform
 
-## Production Deployment
+## API Endpoints
 
-### Environment Variables
+### Bot Management
+- `GET /api/bots` - List all bots
+- `GET /api/bots/:botId` - Get specific bot details
 
-Set the following environment variables in your production environment:
+### Domain Operations
+- `POST /api/domain/search` - Search for domains with a specific bot
+- `POST /api/domain/validate` - Validate domain with WHOIS lookup
+- `POST /api/domain/acquire` - Acquire a domain and add to portfolio
 
-- `STRIPE_SECRET_KEY`: Your Stripe secret key
-- `STRIPE_PUBLISHABLE_KEY`: Your Stripe publishable key  
-- `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook secret
-- `PORT`: Server port (default: 3000)
-- `NODE_ENV`: Set to "production"
+### Portfolio Management
+- `GET /api/portfolio` - Get domain portfolio
+- `GET /api/portfolio/export` - Export portfolio as CSV
 
-### Deployment Options
+## Domain Search
 
-#### Heroku
+The platform uses specialized bots to search for domains based on different strategies:
 
-1. Create a new Heroku app
-2. Set environment variables in Heroku dashboard
-3. Deploy using GitHub integration or Heroku CLI
+1. **Enter Search Query**: Input keywords or domain patterns
+2. **Select Bot**: Choose which bot strategy to use
+3. **Review Results**: Analyze bot recommendations and pricing
+4. **Validate Domains**: Run WHOIS checks for detailed information
+5. **Acquire Domains**: Purchase with digital currency payments
 
-#### Vercel
+## Digital Currency Payments
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run `vercel` in the project directory
-3. Follow the deployment prompts
+Supported cryptocurrencies:
+- **Bitcoin (BTC)**: Primary payment method
+- **Ethereum (ETH)**: Smart contract integration
+- **Litecoin (LTC)**: Fast transaction processing
 
-#### Other Platforms
+## Portfolio Export
 
-The application is compatible with:
-- Railway
-- Render
-- DigitalOcean App Platform
-- AWS Elastic Beanstalk
-- Google Cloud Run
-
-## Payment Processing
-
-The website uses Stripe for secure payment processing:
-
-1. Customers select a service
-2. Payment modal opens with Stripe Elements
-3. Secure payment processing
-4. Confirmation and receipt
-
-### Stripe Configuration
-
-1. Create a Stripe account at [stripe.com](https://stripe.com)
-2. Get your API keys from the Stripe dashboard
-3. Set up webhooks for payment confirmation
-4. Update the publishable key in `script.js`
+Export your domain portfolio in CSV format containing:
+- Domain name
+- Acquisition bot
+- Status
+- Auth/Transfer codes
+- Acquisition date
+- Notes and recommendations
 
 ## Security Features
 
-- Content Security Policy (CSP)
-- CORS protection
-- Input validation
-- Secure payment handling
-- Environment variable protection
+- **Content Security Policy (CSP)** protection
+- **CORS** protection for API endpoints
+- **Input validation** for all user inputs
+- **Secure auth code storage** (encrypted in production)
+- **Environment variable protection**
 
 ## Development
 
 ### File Structure
 
 ```
-├── index.html          # Main portfolio page
-├── styles.css          # CSS styling
-├── script.js           # Frontend JavaScript
-├── server.js           # Node.js server
-├── package.json        # Dependencies
+├── index.html          # Main platform interface
+├── styles.css          # Domain acquisition UI styling
+├── script.js           # Bot management and domain search logic
+├── server.js           # Node.js API server
+├── package.json        # Dependencies and scripts
 ├── .env.example        # Environment template
-├── .github/
-│   └── workflows/
-│       └── deploy.yml  # CI/CD pipeline
+├── DOMAIN_BEST_PRACTICES.md  # Domain acquisition guidelines
 └── README.md           # This file
 ```
 
@@ -139,35 +143,85 @@ The website uses Stripe for secure payment processing:
 - `npm test`: Run tests
 - `npm run build`: Build for production
 
-### Customization
+### Bot Configuration
 
-1. **Services**: Update service information in `server.js` and `index.html`
-2. **Styling**: Modify `styles.css` for custom branding
-3. **Content**: Update portfolio items and contact information
-4. **Payment**: Configure Stripe settings and pricing
+Bots can be activated/deactivated and monitored through the web interface. Each bot maintains:
+- Domain discovery count
+- Active/inactive status
+- Role-specific search algorithms
+- Success rate metrics
+
+## Production Deployment
+
+1. Set production environment variables
+2. Configure digital currency payment gateways
+3. Set up domain registrar API integrations
+4. Configure WHOIS service providers
+5. Deploy to your preferred hosting platform
+
+## Environment Variables
+
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# Domain Services
+WHOIS_API_KEY=your_whois_api_key
+REGISTRAR_API_KEY=your_registrar_api_key
+
+# Cryptocurrency Configuration
+BTC_WALLET_ADDRESS=your_btc_address
+ETH_WALLET_ADDRESS=your_eth_address
+LTC_WALLET_ADDRESS=your_ltc_address
+```
 
 ## Testing
 
 ### Manual Testing
 
 1. Start the server: `npm start`
-2. Navigate to the payment forms
-3. Use Stripe test cards:
-   - Success: `4242424242424242`
-   - Decline: `4000000000000002`
+2. Navigate to bot management interface
+3. Activate bots and perform domain searches
+4. Test domain validation with WHOIS
+5. Verify portfolio management and CSV export
 
-### Automated Testing
+### API Testing
 
 ```bash
-npm test
+# Test bot endpoints
+curl http://localhost:3000/api/bots
+
+# Test domain search
+curl -X POST http://localhost:3000/api/domain/search \
+  -H "Content-Type: application/json" \
+  -d '{"query":"crypto","botId":"hidden"}'
 ```
 
 ## Support
 
-For support and questions:
-- Email: contact@portfolio.com
-- Phone: (555) 123-4567
+For platform support and inquiries:
+- Email: support@domjuan.com
+- Bot Status: Monitor at /health endpoint
+- Documentation: See DOMAIN_BEST_PRACTICES.md
 
 ## License
 
 MIT License - see LICENSE file for details
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add domain acquisition features
+4. Test with bot simulation
+5. Submit a pull request
+
+## Roadmap
+
+- [ ] AI-powered domain valuation
+- [ ] Integration with more registrars
+- [ ] Advanced bot intelligence
+- [ ] Domain portfolio analytics
+- [ ] Automated renewal management
+- [ ] Market trend analysis

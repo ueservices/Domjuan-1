@@ -1,7 +1,7 @@
 {
-  "name": "portfolio-website",
+  "name": "domjuan-domain-acquisition",
   "version": "1.0.0",
-  "description": "Professional portfolio website with payment processing",
+  "description": "Domain acquisition and management platform with bot automation",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,20 +10,23 @@
     "test": "echo 'No tests specified'"
   },
   "keywords": [
-    "portfolio",
-    "payment",
-    "stripe",
-    "nodejs",
-    "express"
+    "domain",
+    "acquisition",
+    "bot",
+    "automation",
+    "whois",
+    "cryptocurrency"
   ],
-  "author": "Portfolio Owner",
+  "author": "Domjuan Team",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "stripe": "^12.0.0",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "whois": "^2.13.5",
+    "csv-writer": "^1.6.0",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
