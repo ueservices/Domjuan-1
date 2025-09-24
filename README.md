@@ -56,6 +56,76 @@ npm run dev
 
 5. Visit `http://localhost:3000` to view the portfolio
 
+## Development Environment
+
+### Available Scripts
+
+- `npm start`: Start production server
+- `npm run dev`: Start development server with auto-reload
+- `npm test`: Run test suite with Jest
+- `npm run test:watch`: Run tests in watch mode
+- `npm run lint`: Run ESLint code quality checks
+- `npm run lint:fix`: Auto-fix ESLint issues
+- `npm run build`: Build for production (minimal for this project)
+
+### Development Workflow
+
+1. **Feature Development**
+   ```bash
+   git checkout -b feature/your-feature-name
+   # Make your changes
+   npm run lint        # Check code quality
+   npm test           # Run tests
+   npm run dev        # Test locally
+   ```
+
+2. **Testing Payment Integration**
+   - Use Stripe test mode with test keys
+   - Test cards:
+     - Success: `4242424242424242`
+     - Decline: `4000000000000002`
+     - Requires authentication: `4000000000003220`
+
+3. **Code Quality Checks**
+   ```bash
+   npm run lint       # Check for code issues
+   npm run lint:fix   # Auto-fix formatting
+   npm test           # Run full test suite
+   ```
+
+### Environment Configuration
+
+Create a `.env` file from `.env.example`:
+
+```env
+# Stripe Configuration (Test Mode)
+STRIPE_SECRET_KEY=sk_test_your_test_secret_key_here
+STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+```
+
+### Debugging
+
+1. **Server Issues**
+   - Check console output from `npm run dev`
+   - Verify environment variables are set
+   - Check port availability
+
+2. **Payment Issues**
+   - Open browser developer tools
+   - Check network requests to `/create-payment-intent`
+   - Verify Stripe keys are correct
+   - Check Stripe dashboard for test transactions
+
+3. **Frontend Issues**
+   - Check browser console for JavaScript errors
+   - Verify Stripe Elements are loading
+   - Check network requests for failed API calls
+
 ## Production Deployment
 
 ### Environment Variables
