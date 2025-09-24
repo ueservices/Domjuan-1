@@ -1,15 +1,56 @@
-# Portfolio Website with Payment Processing
+# Domjuan-1: Portfolio Website & Domain Discovery System
 
-A professional portfolio website with integrated payment processing for services.
+A professional portfolio website with integrated payment processing and a fully autonomous domain discovery bot system.
 
-## Features
+## 🌟 Features
 
+### Portfolio Website
 - 🎨 Modern, responsive design
 - 💳 Stripe payment integration
 - 🔒 Secure payment processing
 - 📱 Mobile-friendly interface
 - ⚡ Fast loading times
 - 🚀 Production-ready deployment
+
+### Domain Discovery Bot System
+- 🤖 **5 Specialized Bots**: Each with unique domain discovery strategies
+- 🔄 **Autonomous Operation**: Continuous scanning without manual intervention
+- 📊 **Comprehensive Logging**: Detailed activity logs and metadata tracking
+- 💾 **Structured Data Export**: CSV and JSON output formats
+- 🔍 **WHOIS Integration**: Domain availability and legitimacy checking
+- ⏰ **Scheduled Scanning**: Configurable automated scanning intervals
+- 🛡️ **Security Features**: Rate limiting, validation, and error handling
+
+## 🤖 Domain Discovery Bots
+
+### Bot Profiles
+
+1. **Nested Bot** - Focuses on nested structures and subdomain-like patterns
+2. **Hidden Bot** - Discovers hidden gem domains that might be overlooked  
+3. **Unexplored Bot** - Targets domains in emerging trends and unexplored niches
+4. **Unseen Bot** - Finds domains that are typically overlooked or invisible
+5. **Unfound Bot** - Discovers domains missed by traditional search methods
+
+### Quick Start - Domain Bots
+
+```bash
+# Start all domain discovery bots
+npm run bots:start
+
+# Check bot status
+npm run bots:status
+
+# Run a single scan cycle
+npm run bots:scan
+
+# Export discovered domains
+npm run bots:export
+
+# View demonstration
+node bots/demo.js
+```
+
+**📖 For detailed bot documentation, see [DOMAIN_BOT_README.md](DOMAIN_BOT_README.md)**
 
 ## Services Offered
 
