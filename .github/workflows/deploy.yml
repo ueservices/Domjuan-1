@@ -13,12 +13,14 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
+      fail-fast: false
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4.1.7
     
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4.0.3
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
@@ -26,22 +28,40 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Run linter
+      run: npm run lint
+      continue-on-error: false
+    
     - name: Run tests
       run: npm test
+      continue-on-error: false
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4.4.3
+      if: always()
+      with:
+        name: test-results-${{ matrix.node-version }}
+        path: coverage/
+        retention-days: 30
       
     - name: Check for security vulnerabilities
       run: npm audit --audit-level moderate
+      continue-on-error: false
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      deployments: write
     
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v4.1.7
     
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4.0.3
       with:
         node-version: '18.x'
         cache: 'npm'
@@ -53,7 +73,7 @@ jobs:
       run: curl https://cli-assets.heroku.com/install.sh | sh
     
     - name: Deploy to Heroku
-      uses: akhileshns/heroku-deploy@v3.12.12
+      uses: akhileshns/heroku-deploy@v3.13.15
       with:
         heroku_api_key: ${{secrets.HEROKU_API_KEY}}
         heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
@@ -61,7 +81,7 @@ jobs:
         
     # Alternative: Deploy to Vercel
     # - name: Deploy to Vercel
-    #   uses: amondnet/vercel-action@v20
+    #   uses: amondnet/vercel-action@v25.2.0
     #   with:
     #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
     #     vercel-org-id: ${{ secrets.ORG_ID}}

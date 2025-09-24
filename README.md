@@ -136,8 +136,13 @@ The website uses Stripe for secure payment processing:
 
 - `npm start`: Start production server
 - `npm run dev`: Start development server with auto-reload
-- `npm test`: Run tests
+- `npm test`: Run tests with coverage
+- `npm run test:watch`: Run tests in watch mode
 - `npm run build`: Build for production
+- `npm run lint`: Run and auto-fix code style issues
+- `npm run lint:check`: Check code style without fixing
+- `npm run security:audit`: Run security vulnerability scan
+- `npm run healthcheck`: Check if the server is running and healthy
 
 ### Customization
 
@@ -161,6 +166,33 @@ The website uses Stripe for secure payment processing:
 ```bash
 npm test
 ```
+
+### Code Quality
+
+The project follows best practices with automated code quality checks:
+
+```bash
+# Run linting checks
+npm run lint:check
+
+# Auto-fix linting issues
+npm run lint
+
+# Run security audit
+npm run security:audit
+
+# Health check monitoring
+npm run healthcheck
+```
+
+### Continuous Integration
+
+The project uses GitHub Actions for automated testing and deployment:
+
+- **Testing**: Runs on Node.js 18.x, 20.x, and 22.x
+- **Code Quality**: ESLint for code style and error detection
+- **Security**: Automated vulnerability scanning with npm audit and CodeQL
+- **Deployment**: Automated deployment to production after tests pass
 
 ## Support
 

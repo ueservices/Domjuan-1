@@ -7,7 +7,12 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "echo 'Static site - no build step required'",
-    "test": "echo 'No tests specified'"
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "lint": "eslint server.js server.test.js --fix && eslint script.js --config .eslintrc.client.json --fix",
+    "lint:check": "eslint server.js server.test.js && eslint script.js --config .eslintrc.client.json",
+    "security:audit": "npm audit --audit-level moderate",
+    "healthcheck": "node healthcheck.js"
   },
   "keywords": [
     "portfolio",
@@ -26,9 +31,23 @@
     "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4",
+    "@eslint/js": "^9.9.0"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "*.js",
+      "!.eslintrc.js",
+      "!jest.config.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
   }
 }
