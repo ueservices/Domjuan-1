@@ -9,6 +9,7 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 - **Recursive Explorer** - Discovers hidden gem domains with deep search capabilities
 - **Real-time Dashboard** - Live monitoring, filtering, and export capabilities
 - **WebSocket Integration** - Instant updates without page refresh
+- **🚀 Autonomous Workflow** - Complete automated PR management, testing, and deployment
 
 ## 📊 Dashboard Capabilities
 
@@ -18,6 +19,7 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 - 📁 **Data Export** - JSON and CSV export functionality
 - ⏱️ **Real-time Activity Log** - Timestamped activity tracking
 - 🎨 **Modern UI** - Glassmorphism design with responsive layout
+- 🤖 **Autonomous Operations** - Automated PR review, testing, and deployment
 
 ## 🚀 Quick Start
 
@@ -69,16 +71,57 @@ npm start
 - **💎 Asset Seeker**: Digital assets (4s intervals, depth 2)  
 - **🔍 Recursive Explorer**: Hidden gems (6s intervals, depth 5)
 
+## 🤖 Autonomous Workflow
+
+This repository includes a complete autonomous PR management system that handles:
+
+- **Automated Testing**: Comprehensive validation of all changes
+- **Security Scanning**: Automatic vulnerability detection
+- **Auto-Review & Merge**: Intelligent PR processing without manual intervention
+- **Production Deployment**: Seamless deployment after successful merges
+- **Quality Assurance**: Multi-layer validation ensuring code quality
+
+### Quick Setup
+```bash
+# Setup autonomous workflow
+./scripts/setup-autonomous-workflow.sh
+
+# Validate setup
+node scripts/validate-setup.js
+```
+
+### Creating Auto-Merge PRs
+Simply include `[auto]` in your PR title:
+```
+[auto] Update dependencies
+[auto] Fix minor bug in dashboard
+chore: update documentation
+```
+
+For complete details, see [AUTONOMOUS_WORKFLOW.md](AUTONOMOUS_WORKFLOW.md).
+
 ## 📁 Project Structure
 
 ```
+├── .github/
+│   ├── workflows/
+│   │   ├── autonomous-pr-management.yml  # Autonomous workflow
+│   │   └── deploy.yml                    # Original deployment
+│   └── branch-protection-config.json    # Auto-merge configuration
 ├── bots/
 │   └── botManager.js      # Bot management system
+├── tests/
+│   ├── bot-manager.test.js    # Bot functionality tests
+│   └── server.test.js         # Server integration tests
+├── scripts/
+│   ├── setup-autonomous-workflow.sh  # Setup automation
+│   └── validate-setup.js             # Validate configuration
 ├── dashboard.html         # Dashboard interface
 ├── dashboard.css          # Dashboard styling
 ├── dashboard.js          # Dashboard JavaScript
 ├── server.js             # Express server with WebSocket
 ├── index.html            # Portfolio homepage
+├── AUTONOMOUS_WORKFLOW.md    # Autonomous system documentation
 ├── DASHBOARD_DOCUMENTATION.md  # Comprehensive dashboard docs
 └── DOMAIN_BEST_PRACTICES.md   # Domain acquisition guidelines
 ```
@@ -163,7 +206,9 @@ The website uses Stripe for secure payment processing:
 
 - `npm start`: Start production server
 - `npm run dev`: Start development server with auto-reload
-- `npm test`: Run tests
+- `npm test`: Run comprehensive test suite
+- `npm run test:bot`: Run bot functionality tests
+- `npm run test:server`: Run server integration tests
 - `npm run build`: Build for production
 
 ### Customization
