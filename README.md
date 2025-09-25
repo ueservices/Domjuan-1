@@ -20,11 +20,41 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 
 ### Three Specialized Autonomous Bots:
 
-- **Domain Hunter** - Specializes in premium domain discovery
-- **Asset Seeker** - Focuses on digital asset domains (NFT, DeFi, Gaming, SaaS)
-- **Recursive Explorer** - Discovers hidden gem domains with deep search capabilities
+- **Domain Hunter** - Uses real GoDaddy API for premium domain discovery
+- **Asset Seeker** - Uses real Namecheap API for digital asset domains (NFT, DeFi, Gaming, SaaS)
+- **Recursive Explorer** - Uses both APIs for deep hidden gem domain discovery
 - **Real-time Dashboard** - Live monitoring, filtering, and export capabilities
 - **WebSocket Integration** - Instant updates without page refresh
+
+### ⚠️ Important: Real API Integration Only
+
+This system now uses **REAL** domain registrar APIs exclusively:
+- ✅ **GoDaddy API** - For domain availability and premium domain discovery
+- ✅ **Namecheap API** - For domain search and digital asset domain discovery  
+- ✅ **Stripe API** - Real payment processing only (no test keys in production)
+- ❌ **NO MOCK DATA** - All simulated/fake domain generation has been removed
+- ❌ **NO FALLBACKS** - API failures surface as errors, no fake data returned
+
+### API Credentials Required
+
+For production use, you **must** configure real API credentials:
+
+```bash
+# GoDaddy API Credentials (required for Domain Hunter bot)
+GODADDY_API_KEY=your_actual_godaddy_api_key
+GODADDY_API_SECRET=your_actual_godaddy_api_secret
+
+# Namecheap API Credentials (required for Asset Seeker bot)
+NAMECHEAP_API_USER=your_actual_namecheap_api_user
+NAMECHEAP_API_KEY=your_actual_namecheap_api_key
+NAMECHEAP_USERNAME=your_namecheap_username
+NAMECHEAP_CLIENT_IP=your_whitelisted_ip_address
+
+# Stripe (production requires real keys)
+STRIPE_SECRET_KEY=sk_live_your_actual_stripe_secret_key
+```
+
+**Development Mode**: The system runs in demo mode without API credentials but requires them for production.
 
 ## 📊 Dashboard Capabilities
 
@@ -34,6 +64,51 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 - 📁 **Data Export** - JSON and CSV export functionality
 - ⏱️ **Real-time Activity Log** - Timestamped activity tracking
 - 🎨 **Modern UI** - Glassmorphism design with responsive layout
+
+## 🔧 API Configuration Setup
+
+### Required API Accounts & Keys
+
+#### 1. GoDaddy API Setup
+1. Visit [GoDaddy Developer Portal](https://developer.godaddy.com/)
+2. Create a developer account and generate API keys
+3. Add to your `.env` file:
+   ```bash
+   GODADDY_API_KEY=your_api_key_here
+   GODADDY_API_SECRET=your_api_secret_here
+   ```
+
+#### 2. Namecheap API Setup  
+1. Visit [Namecheap API Documentation](https://www.namecheap.com/support/api/)
+2. Enable API access in your Namecheap account
+3. Whitelist your server IP address
+4. Add to your `.env` file:
+   ```bash
+   NAMECHEAP_API_USER=your_username
+   NAMECHEAP_API_KEY=your_api_key
+   NAMECHEAP_USERNAME=your_username
+   NAMECHEAP_CLIENT_IP=your_server_ip
+   ```
+
+#### 3. Stripe API Setup
+1. Visit [Stripe Dashboard](https://dashboard.stripe.com/)
+2. Get your live API keys (for production)
+3. Add to your `.env` file:
+   ```bash
+   STRIPE_SECRET_KEY=sk_live_your_live_secret_key
+   STRIPE_PUBLISHABLE_KEY=pk_live_your_live_publishable_key
+   ```
+
+### Environment Configuration
+
+Copy the example environment file and configure your API credentials:
+
+```bash
+cp .env.example .env
+# Edit .env with your actual API credentials
+```
+
+⚠️ **Security Note**: Never commit API credentials to version control. Use environment variables or secure secret management.
 
 ## 🚀 Quick Start - Autonomous Setup
 

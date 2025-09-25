@@ -1,5 +1,14 @@
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_...');
+// Ensure Stripe uses only real credentials, test keys only in development
+const stripeKey = process.env.NODE_ENV === 'development' 
+    ? (process.env.STRIPE_SECRET_KEY || 'sk_test_...') 
+    : process.env.STRIPE_SECRET_KEY;
+
+if (!stripeKey && process.env.NODE_ENV !== 'development') {
+    throw new Error('STRIPE_SECRET_KEY is required in production. No test keys allowed in production.');
+}
+
+const stripe = require('stripe')(stripeKey);
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
