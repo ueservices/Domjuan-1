@@ -1,11 +1,14 @@
 /**
  * Bot Manager - Handles the three domain discovery bots
  * Domain Hunter, Asset Seeker, Recursive Explorer
+ * Now uses real GoDaddy and Namecheap APIs for domain discovery and acquisition
  */
 
 const EventEmitter = require('events');
 const fs = require('fs').promises;
 const path = require('path');
+const GoDaddyClient = require('./godaddyClient');
+const NamecheapClient = require('./namecheapClient');
 
 class BotManager extends EventEmitter {
     constructor() {
@@ -380,6 +383,16 @@ class BaseDomainBot extends EventEmitter {
             lastError: null,
             startTime: null
         };
+        
+        // Initialize API clients
+        try {
+            this.godaddyClient = new GoDaddyClient();
+            this.namecheapClient = new NamecheapClient();
+            console.log(`[${this.name}] API clients initialized successfully`);
+        } catch (error) {
+            console.error(`[${this.name}] Failed to initialize API clients:`, error.message);
+            throw new Error(`Bot initialization failed: ${error.message}`);
+        }
     }
 
     start() {
@@ -465,16 +478,61 @@ class BaseDomainBot extends EventEmitter {
         throw new Error('performSearch must be implemented by subclass');
     }
 
-    generateDomainName() {
-        const prefixes = ['digital', 'crypto', 'web', 'tech', 'ai', 'data', 'cloud', 'meta'];
-        const suffixes = ['asset', 'domain', 'hub', 'vault', 'zone', 'space', 'link', 'net'];
-        const tlds = ['.com', '.net', '.org', '.io', '.ai', '.tech'];
-        
-        const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-        const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-        const tld = tlds[Math.floor(Math.random() * tlds.length)];
-        
-        return `${prefix}${suffix}${Math.floor(Math.random() * 9999)}${tld}`;
+    /**
+     * Generate domain search queries based on current trends and registrar APIs
+     * @param {string} registrar - 'godaddy' or 'namecheap'
+     * @returns {Array<string>}
+     */
+    generateSearchQueries(registrar = 'godaddy') {
+        if (registrar === 'godaddy') {
+            return this.godaddyClient.generateSearchQueries();
+        } else if (registrar === 'namecheap') {
+            return this.namecheapClient.generateTrendingQueries();
+        } else {
+            throw new Error(`Unknown registrar: ${registrar}`);
+        }
+    }
+
+    /**
+     * Search for available domains using real API
+     * @param {string} query - Search query
+     * @param {string} registrar - 'godaddy' or 'namecheap'
+     * @returns {Promise<Array>}
+     */
+    async searchDomains(query, registrar = 'godaddy') {
+        try {
+            if (registrar === 'godaddy') {
+                return await this.godaddyClient.searchDomains(query);
+            } else if (registrar === 'namecheap') {
+                return await this.namecheapClient.searchDomains(query);
+            } else {
+                throw new Error(`Unknown registrar: ${registrar}`);
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Domain search failed for ${query} on ${registrar}:`, error.message);
+            throw error;
+        }
+    }
+
+    /**
+     * Check domain availability using real API
+     * @param {string} domain - Domain to check
+     * @param {string} registrar - 'godaddy' or 'namecheap'
+     * @returns {Promise<Object>}
+     */
+    async checkDomainAvailability(domain, registrar = 'godaddy') {
+        try {
+            if (registrar === 'godaddy') {
+                return await this.godaddyClient.checkDomainAvailability(domain);
+            } else if (registrar === 'namecheap') {
+                return await this.namecheapClient.checkDomainAvailability(domain);
+            } else {
+                throw new Error(`Unknown registrar: ${registrar}`);
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Domain availability check failed for ${domain} on ${registrar}:`, error.message);
+            throw error;
+        }
     }
 
     getStatus() {
@@ -493,192 +551,606 @@ class BaseDomainBot extends EventEmitter {
 
 class DomainHunterBot extends BaseDomainBot {
     constructor() {
-        super('Domain Hunter', { searchInterval: 3000, searchDepth: 3 });
+        super('Domain Hunter', { searchInterval: 8000, searchDepth: 3 }); // Increased interval for API rate limits
         this.specialty = 'premium domains';
+        this.currentQueryIndex = 0;
+        this.searchQueries = [];
     }
 
     async performSearch() {
-        const domain = this.generateDomainName();
-        this.stats.domainsScanned++;
-
-        // Simulate domain discovery
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
-
-        if (Math.random() > 0.7) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'premium',
-                value: Math.floor(Math.random() * 10000) + 1000,
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
-
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'premium',
-                specialty: this.specialty
-            });
-
-            // Attempt acquisition
-            if (Math.random() > 0.5) {
-                await this.attemptAcquisition(domain);
+        try {
+            // Generate or refresh search queries if needed
+            if (this.searchQueries.length === 0 || this.currentQueryIndex >= this.searchQueries.length) {
+                this.searchQueries = this.generateSearchQueries('godaddy');
+                this.currentQueryIndex = 0;
+                console.log(`[${this.name}] Generated ${this.searchQueries.length} search queries`);
             }
-        }
 
-        this.emit('status', {
-            bot: this.name,
-            status: 'searching',
-            message: `Scanned: ${this.stats.domainsScanned}, Found: ${this.stats.domainsDiscovered}`
-        });
+            const query = this.searchQueries[this.currentQueryIndex];
+            this.currentQueryIndex++;
+            this.stats.domainsScanned++;
+
+            console.log(`[${this.name}] Searching for domains with query: ${query}`);
+
+            // Search for domains using GoDaddy API
+            const searchResults = await this.searchDomains(query, 'godaddy');
+            
+            if (searchResults.length > 0) {
+                console.log(`[${this.name}] Found ${searchResults.length} available domains for query: ${query}`);
+                
+                for (const domainInfo of searchResults) {
+                    this.stats.domainsDiscovered++;
+                    
+                    const discoveredDomain = {
+                        domain: domainInfo.domain,
+                        type: 'premium',
+                        value: domainInfo.price || 0,
+                        currency: domainInfo.currency || 'USD',
+                        registrar: 'GoDaddy',
+                        category: domainInfo.type,
+                        discoveredAt: new Date()
+                    };
+                    
+                    this.discovered.push(discoveredDomain);
+
+                    this.emit('discovery', {
+                        bot: this.name,
+                        domain: domainInfo.domain,
+                        type: 'premium',
+                        specialty: this.specialty,
+                        price: domainInfo.price,
+                        registrar: 'GoDaddy'
+                    });
+
+                    // Attempt acquisition for high-value domains
+                    if (domainInfo.price && domainInfo.price > 0 && domainInfo.price < 100) {
+                        await this.attemptAcquisition(domainInfo.domain, domainInfo.price, 'GoDaddy');
+                    }
+                }
+            } else {
+                console.log(`[${this.name}] No available domains found for query: ${query}`);
+            }
+
+            this.emit('status', {
+                bot: this.name,
+                status: 'searching',
+                message: `Scanned: ${this.stats.domainsScanned}, Found: ${this.stats.domainsDiscovered}`,
+                query: query,
+                registrar: 'GoDaddy'
+            });
+
+        } catch (error) {
+            console.error(`[${this.name}] Search cycle error:`, error.message);
+            this.stats.errors++;
+            throw error;
+        }
     }
 
-    async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000));
-        
-        const success = Math.random() > 0.3;
-        if (success) {
-            this.stats.domainsAcquired++;
-            this.acquired.push({
+    async attemptAcquisition(domain, price, registrar) {
+        try {
+            console.log(`[${this.name}] Attempting to acquire domain: ${domain} for $${price} via ${registrar}`);
+            
+            // Note: Actual domain purchase would require payment setup and contact information
+            // This is a placeholder that logs the attempt
+            console.log(`[${this.name}] Domain acquisition attempted: ${domain}`);
+            console.log(`[${this.name}] Price: $${price}`);
+            console.log(`[${this.name}] Registrar: ${registrar}`);
+            console.log(`[${this.name}] Note: Actual purchase requires payment method and contact information setup`);
+            
+            // For now, we'll simulate a decision not to purchase to avoid actual costs
+            const shouldAcquire = false; // Set to true when ready for actual purchases
+            
+            if (shouldAcquire) {
+                // This would call the actual purchase API
+                // const result = await this.godaddyClient.purchaseDomain(domain, contactInfo);
+                
+                this.stats.domainsAcquired++;
+                this.acquired.push({
+                    domain,
+                    acquiredAt: new Date(),
+                    price,
+                    registrar,
+                    status: 'acquired'
+                });
+
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: true,
+                    type: 'premium',
+                    price,
+                    registrar
+                });
+            } else {
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: false,
+                    type: 'premium',
+                    reason: 'Acquisition disabled - set shouldAcquire to true and configure payment methods',
+                    price,
+                    registrar
+                });
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Acquisition attempt failed for ${domain}:`, error.message);
+            this.emit('acquisition', {
+                bot: this.name,
                 domain,
-                acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 5000) + 500
+                success: false,
+                type: 'premium',
+                error: error.message,
+                registrar
             });
         }
-
-        this.emit('acquisition', {
-            bot: this.name,
-            domain,
-            success,
-            type: 'premium'
-        });
     }
 }
 
 class AssetSeekerBot extends BaseDomainBot {
     constructor() {
-        super('Asset Seeker', { searchInterval: 4000, searchDepth: 2 });
+        super('Asset Seeker', { searchInterval: 10000, searchDepth: 2 }); // Increased interval for API rate limits
         this.specialty = 'digital assets';
+        this.currentQueryIndex = 0;
+        this.searchQueries = [];
+        this.focusCategories = ['crypto', 'nft', 'defi', 'web3', 'ai', 'fintech'];
     }
 
     async performSearch() {
-        const domain = this.generateDomainName();
-        this.stats.domainsScanned++;
-
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1500));
-
-        if (Math.random() > 0.6) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'asset',
-                category: ['NFT', 'DeFi', 'Gaming', 'SaaS'][Math.floor(Math.random() * 4)],
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
-
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'asset',
-                specialty: this.specialty
-            });
-
-            if (Math.random() > 0.4) {
-                await this.attemptAcquisition(domain);
+        try {
+            // Generate or refresh search queries if needed
+            if (this.searchQueries.length === 0 || this.currentQueryIndex >= this.searchQueries.length) {
+                this.searchQueries = this.generateSearchQueries('namecheap');
+                this.currentQueryIndex = 0;
+                console.log(`[${this.name}] Generated ${this.searchQueries.length} search queries`);
             }
-        }
 
-        this.emit('status', {
-            bot: this.name,
-            status: 'seeking',
-            message: `Assets scanned: ${this.stats.domainsScanned}, Assets found: ${this.stats.domainsDiscovered}`
-        });
+            const query = this.searchQueries[this.currentQueryIndex];
+            this.currentQueryIndex++;
+            this.stats.domainsScanned++;
+
+            console.log(`[${this.name}] Searching for asset domains with query: ${query}`);
+
+            // Search for domains using Namecheap API
+            const searchResults = await this.searchDomains(query, 'namecheap');
+            
+            if (searchResults.length > 0) {
+                console.log(`[${this.name}] Found ${searchResults.length} available asset domains for query: ${query}`);
+                
+                for (const domainInfo of searchResults) {
+                    // Focus on asset-related domains
+                    if (this.isAssetRelated(domainInfo.domain)) {
+                        this.stats.domainsDiscovered++;
+                        
+                        const discoveredDomain = {
+                            domain: domainInfo.domain,
+                            type: 'asset',
+                            category: domainInfo.type,
+                            registrar: 'Namecheap',
+                            isPremium: domainInfo.isPremium,
+                            premiumPrice: domainInfo.premiumRegistrationPrice,
+                            discoveredAt: new Date()
+                        };
+                        
+                        this.discovered.push(discoveredDomain);
+
+                        this.emit('discovery', {
+                            bot: this.name,
+                            domain: domainInfo.domain,
+                            type: 'asset',
+                            specialty: this.specialty,
+                            category: domainInfo.type,
+                            registrar: 'Namecheap',
+                            isPremium: domainInfo.isPremium
+                        });
+
+                        // Attempt acquisition for non-premium or low-cost premium domains
+                        if (!domainInfo.isPremium || 
+                            (domainInfo.premiumRegistrationPrice && domainInfo.premiumRegistrationPrice < 50)) {
+                            await this.attemptAcquisition(
+                                domainInfo.domain, 
+                                domainInfo.premiumRegistrationPrice || 10, 
+                                'Namecheap'
+                            );
+                        }
+                    }
+                }
+            } else {
+                console.log(`[${this.name}] No available asset domains found for query: ${query}`);
+            }
+
+            this.emit('status', {
+                bot: this.name,
+                status: 'seeking',
+                message: `Assets scanned: ${this.stats.domainsScanned}, Assets found: ${this.stats.domainsDiscovered}`,
+                query: query,
+                registrar: 'Namecheap'
+            });
+
+        } catch (error) {
+            console.error(`[${this.name}] Search cycle error:`, error.message);
+            this.stats.errors++;
+            throw error;
+        }
     }
 
-    async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1800));
+    /**
+     * Check if a domain is related to digital assets
+     * @param {string} domain - Domain to check
+     * @returns {boolean}
+     */
+    isAssetRelated(domain) {
+        const domainLower = domain.toLowerCase();
+        const assetKeywords = [
+            'crypto', 'coin', 'token', 'nft', 'defi', 'web3', 'blockchain',
+            'digital', 'asset', 'finance', 'fintech', 'pay', 'wallet',
+            'trade', 'exchange', 'market', 'invest', 'fund', 'dao'
+        ];
         
-        const success = Math.random() > 0.25;
-        if (success) {
-            this.stats.domainsAcquired++;
-            this.acquired.push({
+        return assetKeywords.some(keyword => domainLower.includes(keyword));
+    }
+
+    async attemptAcquisition(domain, price, registrar) {
+        try {
+            console.log(`[${this.name}] Attempting to acquire asset domain: ${domain} for $${price} via ${registrar}`);
+            
+            // Note: Actual domain registration would require contact information and payment setup
+            console.log(`[${this.name}] Asset domain acquisition attempted: ${domain}`);
+            console.log(`[${this.name}] Price: $${price}`);
+            console.log(`[${this.name}] Registrar: ${registrar}`);
+            console.log(`[${this.name}] Note: Actual registration requires contact information and payment method setup`);
+            
+            // For now, we'll simulate a decision not to purchase to avoid actual costs
+            const shouldAcquire = false; // Set to true when ready for actual registrations
+            
+            if (shouldAcquire) {
+                // This would call the actual registration API
+                // const result = await this.namecheapClient.registerDomain(domain, contactInfo);
+                
+                this.stats.domainsAcquired++;
+                this.acquired.push({
+                    domain,
+                    acquiredAt: new Date(),
+                    price,
+                    registrar,
+                    status: 'acquired'
+                });
+
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: true,
+                    type: 'asset',
+                    price,
+                    registrar
+                });
+            } else {
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: false,
+                    type: 'asset',
+                    reason: 'Acquisition disabled - set shouldAcquire to true and configure contact/payment info',
+                    price,
+                    registrar
+                });
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Acquisition attempt failed for ${domain}:`, error.message);
+            this.emit('acquisition', {
+                bot: this.name,
                 domain,
-                acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 3000) + 200
+                success: false,
+                type: 'asset',
+                error: error.message,
+                registrar
             });
         }
-
-        this.emit('acquisition', {
-            bot: this.name,
-            domain,
-            success,
-            type: 'asset'
-        });
     }
 }
 
 class RecursiveExplorerBot extends BaseDomainBot {
     constructor() {
-        super('Recursive Explorer', { searchInterval: 6000, searchDepth: 5 });
+        super('Recursive Explorer', { searchInterval: 12000, searchDepth: 5 }); // Increased interval for API rate limits
         this.specialty = 'hidden gems';
+        this.currentDepth = 0;
+        this.exploredDomains = new Set();
+        this.baseDomains = [];
+        this.currentRegistrar = 'godaddy';
     }
 
     async performSearch() {
-        const domain = this.generateDomainName();
-        this.stats.domainsScanned++;
-        this.stats.currentDepth = Math.min(this.stats.currentDepth + 1, this.searchDepth);
+        try {
+            this.stats.currentDepth = Math.min(this.currentDepth + 1, this.searchDepth);
+            
+            // Alternate between registrars for deeper exploration
+            this.currentRegistrar = this.currentDepth % 2 === 0 ? 'godaddy' : 'namecheap';
+            
+            console.log(`[${this.name}] Exploring at depth ${this.stats.currentDepth}/${this.searchDepth} using ${this.currentRegistrar}`);
 
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+            let explorationResults = [];
 
-        if (Math.random() > 0.8) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'hidden',
-                depth: this.stats.currentDepth,
-                potential: Math.floor(Math.random() * 100),
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
-
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'hidden',
-                specialty: this.specialty,
-                depth: this.stats.currentDepth
-            });
-
-            if (Math.random() > 0.6) {
-                await this.attemptAcquisition(domain);
+            if (this.stats.currentDepth === 1) {
+                // Initial exploration - use trending queries
+                const queries = this.generateSearchQueries(this.currentRegistrar);
+                const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+                explorationResults = await this.exploreBaseDomain(randomQuery);
+            } else {
+                // Deeper exploration - use variations of discovered domains
+                if (this.baseDomains.length > 0) {
+                    const baseDomain = this.baseDomains[Math.floor(Math.random() * this.baseDomains.length)];
+                    explorationResults = await this.exploreVariations(baseDomain);
+                } else {
+                    // Fallback to new base exploration
+                    const queries = this.generateSearchQueries(this.currentRegistrar);
+                    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
+                    explorationResults = await this.exploreBaseDomain(randomQuery);
+                }
             }
-        }
 
-        this.emit('status', {
-            bot: this.name,
-            status: 'exploring',
-            message: `Depth: ${this.stats.currentDepth}/${this.searchDepth}, Found: ${this.stats.domainsDiscovered} gems`
-        });
+            this.stats.domainsScanned += explorationResults.length;
+
+            for (const domainInfo of explorationResults) {
+                if (!this.exploredDomains.has(domainInfo.domain)) {
+                    this.exploredDomains.add(domainInfo.domain);
+                    
+                    if (this.isHiddenGem(domainInfo.domain)) {
+                        this.stats.domainsDiscovered++;
+                        
+                        const discoveredDomain = {
+                            domain: domainInfo.domain,
+                            type: 'hidden',
+                            depth: this.stats.currentDepth,
+                            potential: this.calculatePotential(domainInfo.domain),
+                            registrar: domainInfo.registrar,
+                            price: domainInfo.price || domainInfo.premiumRegistrationPrice,
+                            discoveredAt: new Date()
+                        };
+                        
+                        this.discovered.push(discoveredDomain);
+                        
+                        // Add to base domains for future exploration
+                        if (this.stats.currentDepth <= 2) {
+                            const baseName = domainInfo.domain.split('.')[0];
+                            if (!this.baseDomains.includes(baseName)) {
+                                this.baseDomains.push(baseName);
+                            }
+                        }
+
+                        this.emit('discovery', {
+                            bot: this.name,
+                            domain: domainInfo.domain,
+                            type: 'hidden',
+                            specialty: this.specialty,
+                            depth: this.stats.currentDepth,
+                            potential: discoveredDomain.potential,
+                            registrar: domainInfo.registrar
+                        });
+
+                        // Attempt acquisition for high-potential hidden gems
+                        if (discoveredDomain.potential > 70) {
+                            await this.attemptAcquisition(
+                                domainInfo.domain, 
+                                domainInfo.price || domainInfo.premiumRegistrationPrice || 15, 
+                                domainInfo.registrar
+                            );
+                        }
+                    }
+                }
+            }
+
+            this.emit('status', {
+                bot: this.name,
+                status: 'exploring',
+                message: `Depth: ${this.stats.currentDepth}/${this.searchDepth}, Found: ${this.stats.domainsDiscovered} gems`,
+                registrar: this.currentRegistrar,
+                baseDomains: this.baseDomains.length
+            });
+
+        } catch (error) {
+            console.error(`[${this.name}] Exploration cycle error:`, error.message);
+            this.stats.errors++;
+            throw error;
+        }
     }
 
-    async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 500));
+    /**
+     * Explore a base domain for available variations
+     * @param {string} baseDomain - Base domain to explore
+     * @returns {Promise<Array>}
+     */
+    async exploreBaseDomain(baseDomain) {
+        try {
+            console.log(`[${this.name}] Exploring base domain: ${baseDomain}`);
+            return await this.searchDomains(baseDomain, this.currentRegistrar);
+        } catch (error) {
+            console.error(`[${this.name}] Failed to explore base domain ${baseDomain}:`, error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Explore variations of a known domain
+     * @param {string} baseName - Base name without TLD
+     * @returns {Promise<Array>}
+     */
+    async exploreVariations(baseName) {
+        try {
+            console.log(`[${this.name}] Exploring variations of: ${baseName}`);
+            
+            if (this.currentRegistrar === 'namecheap') {
+                return await this.namecheapClient.generateDomainVariations(baseName);
+            } else {
+                // For GoDaddy, we'll create our own variations
+                const variations = this.generateVariations(baseName);
+                const results = [];
+                
+                for (const variation of variations.slice(0, 5)) { // Limit to avoid rate limits
+                    try {
+                        const availability = await this.checkDomainAvailability(variation, 'godaddy');
+                        if (availability.available) {
+                            results.push({
+                                domain: variation,
+                                available: true,
+                                price: availability.price,
+                                registrar: 'GoDaddy'
+                            });
+                        }
+                    } catch (error) {
+                        console.warn(`[${this.name}] Failed to check variation ${variation}:`, error.message);
+                    }
+                }
+                
+                return results;
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Failed to explore variations of ${baseName}:`, error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Generate domain variations manually
+     * @param {string} baseName - Base name
+     * @returns {Array<string>}
+     */
+    generateVariations(baseName) {
+        const prefixes = ['get', 'my', 'the', 'new', 'best', 'top'];
+        const suffixes = ['app', 'pro', 'hub', 'lab', 'tech', 'ai'];
+        const tlds = ['.com', '.net', '.org', '.io', '.ai', '.tech'];
+        const variations = [];
         
-        const success = Math.random() > 0.4;
-        if (success) {
-            this.stats.domainsAcquired++;
-            this.acquired.push({
+        // Add prefixes
+        prefixes.forEach(prefix => {
+            tlds.forEach(tld => {
+                variations.push(`${prefix}${baseName}${tld}`);
+            });
+        });
+        
+        // Add suffixes
+        suffixes.forEach(suffix => {
+            tlds.forEach(tld => {
+                variations.push(`${baseName}${suffix}${tld}`);
+            });
+        });
+        
+        return variations;
+    }
+
+    /**
+     * Determine if a domain is a potential hidden gem
+     * @param {string} domain - Domain to evaluate
+     * @returns {boolean}
+     */
+    isHiddenGem(domain) {
+        const domainLower = domain.toLowerCase();
+        
+        // Check for valuable keywords
+        const valuableKeywords = [
+            'ai', 'crypto', 'nft', 'defi', 'web3', 'meta', 'smart', 'digital',
+            'blockchain', 'fintech', 'saas', 'cloud', 'data', 'tech', 'app'
+        ];
+        
+        const hasValuableKeyword = valuableKeywords.some(keyword => domainLower.includes(keyword));
+        const isShort = domain.split('.')[0].length <= 8;
+        const hasGoodTLD = ['.com', '.ai', '.io', '.tech'].some(tld => domain.includes(tld));
+        
+        return hasValuableKeyword || (isShort && hasGoodTLD);
+    }
+
+    /**
+     * Calculate potential value of a domain
+     * @param {string} domain - Domain to evaluate
+     * @returns {number} Potential score 0-100
+     */
+    calculatePotential(domain) {
+        const domainLower = domain.toLowerCase();
+        let score = 30; // Base score
+        
+        // Length bonus (shorter is better)
+        const nameLength = domain.split('.')[0].length;
+        if (nameLength <= 4) score += 30;
+        else if (nameLength <= 6) score += 20;
+        else if (nameLength <= 8) score += 10;
+        
+        // Keyword bonuses
+        const highValueKeywords = ['ai', 'crypto', 'nft', 'web3'];
+        const mediumValueKeywords = ['tech', 'digital', 'smart', 'meta'];
+        
+        highValueKeywords.forEach(keyword => {
+            if (domainLower.includes(keyword)) score += 25;
+        });
+        
+        mediumValueKeywords.forEach(keyword => {
+            if (domainLower.includes(keyword)) score += 15;
+        });
+        
+        // TLD bonus
+        if (domain.endsWith('.com')) score += 20;
+        else if (domain.endsWith('.ai')) score += 15;
+        else if (domain.endsWith('.io')) score += 10;
+        
+        return Math.min(score, 100);
+    }
+
+    async attemptAcquisition(domain, price, registrar) {
+        try {
+            console.log(`[${this.name}] Attempting to acquire hidden gem: ${domain} for $${price} via ${registrar}`);
+            
+            // Note: Actual domain acquisition would require proper setup
+            console.log(`[${this.name}] Hidden gem acquisition attempted: ${domain}`);
+            console.log(`[${this.name}] Price: $${price}`);
+            console.log(`[${this.name}] Registrar: ${registrar}`);
+            console.log(`[${this.name}] Depth: ${this.stats.currentDepth}`);
+            console.log(`[${this.name}] Note: Actual acquisition requires payment and contact setup`);
+            
+            // For now, we'll simulate a decision not to purchase to avoid actual costs
+            const shouldAcquire = false; // Set to true when ready for actual acquisitions
+            
+            if (shouldAcquire) {
+                // This would call the actual acquisition API
+                this.stats.domainsAcquired++;
+                this.acquired.push({
+                    domain,
+                    acquiredAt: new Date(),
+                    price,
+                    registrar,
+                    depth: this.stats.currentDepth,
+                    status: 'acquired'
+                });
+
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: true,
+                    type: 'hidden',
+                    price,
+                    registrar,
+                    depth: this.stats.currentDepth
+                });
+            } else {
+                this.emit('acquisition', {
+                    bot: this.name,
+                    domain,
+                    success: false,
+                    type: 'hidden',
+                    reason: 'Acquisition disabled - set shouldAcquire to true and configure payment methods',
+                    price,
+                    registrar,
+                    depth: this.stats.currentDepth
+                });
+            }
+        } catch (error) {
+            console.error(`[${this.name}] Acquisition attempt failed for ${domain}:`, error.message);
+            this.emit('acquisition', {
+                bot: this.name,
                 domain,
-                acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 2000) + 100
+                success: false,
+                type: 'hidden',
+                error: error.message,
+                registrar,
+                depth: this.stats.currentDepth
             });
         }
-
-        this.emit('acquisition', {
-            bot: this.name,
-            domain,
-            success,
-            type: 'hidden'
-        });
     }
 }
 
