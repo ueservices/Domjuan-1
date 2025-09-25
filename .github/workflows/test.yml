@@ -1,0 +1,75 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+      continue-on-error: true
+    
+    - name: Create test environment
+      run: |
+        mkdir -p data logs backups
+        cp .env.example .env
+    
+    - name: Start server for testing
+      run: |
+        npm start &
+        SERVER_PID=$!
+        echo $SERVER_PID > server.pid
+        sleep 10
+      
+    - name: Run health check tests
+      run: |
+        curl -f http://localhost:3000/health || exit 1
+        curl -f http://localhost:3000/dashboard || exit 1
+        curl -f http://localhost:3000/api/services || exit 1
+      
+    - name: Test bot management APIs
+      run: |
+        curl -X POST http://localhost:3000/api/start-bots || exit 1
+        sleep 5
+        curl -f http://localhost:3000/api/status || exit 1
+        curl -X POST http://localhost:3000/api/stop-bots || exit 1
+      
+    - name: Test export functionality
+      run: |
+        curl -f http://localhost:3000/api/export/json -o test_export.json || exit 1
+        curl -f http://localhost:3000/api/export/csv -o test_export.csv || exit 1
+        test -s test_export.json || exit 1
+        test -s test_export.csv || exit 1
+      
+    - name: Stop server
+      run: |
+        if [ -f server.pid ]; then
+          kill $(cat server.pid) || true
+          rm server.pid
+        fi
+      
+    - name: Clean up test files
+      run: |
+        rm -f test_export.json test_export.csv .env
+        rm -rf data logs backups

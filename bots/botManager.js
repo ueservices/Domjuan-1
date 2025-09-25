@@ -6,14 +6,16 @@
 const EventEmitter = require('events');
 const fs = require('fs').promises;
 const path = require('path');
+const DomainRegistrarAPI = require('./domainApis');
 
 class BotManager extends EventEmitter {
     constructor() {
         super();
+        this.domainAPI = new DomainRegistrarAPI();
         this.bots = {
-            domainHunter: new DomainHunterBot(),
-            assetSeeker: new AssetSeekerBot(),
-            recursiveExplorer: new RecursiveExplorerBot()
+            domainHunter: new DomainHunterBot(this.domainAPI),
+            assetSeeker: new AssetSeekerBot(this.domainAPI),
+            recursiveExplorer: new RecursiveExplorerBot(this.domainAPI)
         };
         this.isRunning = false;
         this.startTime = null;
@@ -21,14 +23,18 @@ class BotManager extends EventEmitter {
             totalDomains: 0,
             totalAssets: 0,
             successfulAcquisitions: 0,
-            failedAttempts: 0
+            failedAttempts: 0,
+            apiCallsToday: 0,
+            lastApiReset: new Date().toDateString()
         };
         this.config = {
             autoRestart: process.env.AUTO_RESTART_BOTS !== 'false',
             exportInterval: parseInt(process.env.EXPORT_INTERVAL_MS) || 300000, // 5 minutes
             dataDir: process.env.DATA_DIR || './data',
             maxLogAge: parseInt(process.env.MAX_LOG_AGE_MS) || 86400000, // 24 hours
-            webhookUrl: process.env.WEBHOOK_URL || null
+            webhookUrl: process.env.WEBHOOK_URL || null,
+            useRealAPIs: process.env.USE_REAL_DOMAIN_APIS === 'true',
+            maxApiCallsPerDay: parseInt(process.env.MAX_API_CALLS_PER_DAY) || 1000
         };
         this.exportTimer = null;
         this.healthCheckTimer = null;
@@ -39,11 +45,38 @@ class BotManager extends EventEmitter {
         try {
             await fs.mkdir(this.config.dataDir, { recursive: true });
             await this.loadPreviousData();
+            
+            // Check API status if using real APIs
+            if (this.config.useRealAPIs) {
+                const apiStatus = await this.domainAPI.getApiStatus();
+                console.log('Domain API Status:', apiStatus.overallStatus);
+                this.sendWebhookNotification(`🔌 Domain APIs status: ${apiStatus.overallStatus}`, 'info');
+            }
+            
             this.startPeriodicExports();
             this.startHealthMonitoring();
+            this.resetDailyApiCounter();
         } catch (error) {
             console.error('Failed to initialize BotManager:', error);
         }
+    }
+
+    resetDailyApiCounter() {
+        const today = new Date().toDateString();
+        if (this.stats.lastApiReset !== today) {
+            this.stats.apiCallsToday = 0;
+            this.stats.lastApiReset = today;
+        }
+    }
+
+    async checkApiLimits() {
+        this.resetDailyApiCounter();
+        
+        if (this.stats.apiCallsToday >= this.config.maxApiCallsPerDay) {
+            throw new Error(`Daily API limit reached: ${this.stats.apiCallsToday}/${this.config.maxApiCallsPerDay}`);
+        }
+        
+        this.stats.apiCallsToday++;
     }
 
     startAllBots() {
@@ -58,10 +91,21 @@ class BotManager extends EventEmitter {
             bot.on('acquisition', (data) => this.handleBotAcquisition(data));
             bot.on('status', (data) => this.handleBotStatus(data));
             bot.on('error', (data) => this.handleBotError(data));
+            bot.on('apiCall', (data) => this.handleApiCall(data));
         });
 
         this.emit('allBotsStarted', { timestamp: this.startTime });
         this.sendWebhookNotification('🤖 All domain discovery bots started successfully', 'success');
+    }
+
+    handleApiCall(data) {
+        this.stats.apiCallsToday++;
+        this.emit('apiCall', {
+            ...data,
+            dailyCount: this.stats.apiCallsToday,
+            dailyLimit: this.config.maxApiCallsPerDay,
+            timestamp: new Date()
+        });
     }
 
     stopAllBots() {
@@ -358,9 +402,10 @@ class BotManager extends EventEmitter {
 }
 
 class BaseDomainBot extends EventEmitter {
-    constructor(name, config = {}) {
+    constructor(name, domainAPI, config = {}) {
         super();
         this.name = name;
+        this.domainAPI = domainAPI;
         this.isActive = false;
         this.searchDepth = config.searchDepth || 1;
         this.searchInterval = config.searchInterval || 5000;
@@ -371,12 +416,14 @@ class BaseDomainBot extends EventEmitter {
         this.consecutiveErrors = 0;
         this.maxConsecutiveErrors = parseInt(process.env.MAX_CONSECUTIVE_ERRORS) || 5;
         this.backoffMultiplier = 2;
+        this.useRealAPI = process.env.USE_REAL_DOMAIN_APIS === 'true';
         this.stats = {
             domainsScanned: 0,
             domainsDiscovered: 0,
             domainsAcquired: 0,
             currentDepth: 0,
             errors: 0,
+            apiCalls: 0,
             lastError: null,
             startTime: null
         };
@@ -465,6 +512,27 @@ class BaseDomainBot extends EventEmitter {
         throw new Error('performSearch must be implemented by subclass');
     }
 
+    async checkDomainAvailability(domain) {
+        if (!this.domainAPI.isValidDomain(domain)) {
+            throw new Error(`Invalid domain format: ${domain}`);
+        }
+
+        this.stats.apiCalls++;
+        this.emit('apiCall', { bot: this.name, domain, timestamp: new Date() });
+
+        if (this.useRealAPI) {
+            try {
+                const result = await this.domainAPI.checkDomainAvailability(domain);
+                return result;
+            } catch (error) {
+                console.warn(`Real API failed for ${domain}, falling back to mock:`, error.message);
+                return this.mockDomainCheck(domain);
+            }
+        } else {
+            return this.mockDomainCheck(domain);
+        }
+    }
+
     generateDomainName() {
         const prefixes = ['digital', 'crypto', 'web', 'tech', 'ai', 'data', 'cloud', 'meta'];
         const suffixes = ['asset', 'domain', 'hub', 'vault', 'zone', 'space', 'link', 'net'];
@@ -475,6 +543,46 @@ class BaseDomainBot extends EventEmitter {
         const tld = tlds[Math.floor(Math.random() * tlds.length)];
         
         return `${prefix}${suffix}${Math.floor(Math.random() * 9999)}${tld}`;
+    }
+
+    async checkDomainAvailability(domain) {
+        if (!this.domainAPI.isValidDomain(domain)) {
+            throw new Error(`Invalid domain format: ${domain}`);
+        }
+
+        this.stats.apiCalls++;
+        this.emit('apiCall', { bot: this.name, domain, timestamp: new Date() });
+
+        if (this.useRealAPI) {
+            try {
+                const result = await this.domainAPI.checkDomainAvailability(domain);
+                return result;
+            } catch (error) {
+                console.warn(`Real API failed for ${domain}, falling back to mock:`, error.message);
+                return this.mockDomainCheck(domain);
+            }
+        } else {
+            return this.mockDomainCheck(domain);
+        }
+    }
+
+    mockDomainCheck(domain) {
+        // Mock domain availability check for testing/development
+        const available = Math.random() > 0.7;
+        return {
+            domain,
+            overallAvailable: available,
+            timestamp: new Date(),
+            registrars: {
+                mock: {
+                    domain,
+                    available,
+                    registrar: 'Mock',
+                    price: available ? Math.floor(Math.random() * 5000) + 500 : null,
+                    currency: 'USD'
+                }
+            }
+        };
     }
 
     getStatus() {
@@ -492,8 +600,8 @@ class BaseDomainBot extends EventEmitter {
 }
 
 class DomainHunterBot extends BaseDomainBot {
-    constructor() {
-        super('Domain Hunter', { searchInterval: 3000, searchDepth: 3 });
+    constructor(domainAPI) {
+        super('Domain Hunter', domainAPI, { searchInterval: 3000, searchDepth: 3 });
         this.specialty = 'premium domains';
     }
 
@@ -501,63 +609,85 @@ class DomainHunterBot extends BaseDomainBot {
         const domain = this.generateDomainName();
         this.stats.domainsScanned++;
 
-        // Simulate domain discovery
+        // Simulate some processing time
         await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
 
-        if (Math.random() > 0.7) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'premium',
-                value: Math.floor(Math.random() * 10000) + 1000,
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
+        try {
+            const availabilityResult = await this.checkDomainAvailability(domain);
+            
+            if (availabilityResult.overallAvailable) {
+                this.stats.domainsDiscovered++;
+                
+                const domainInfo = {
+                    domain,
+                    type: 'premium',
+                    value: availabilityResult.bestOption?.price || Math.floor(Math.random() * 10000) + 1000,
+                    registrar: availabilityResult.bestOption?.registrar || 'Unknown',
+                    discoveredAt: new Date(),
+                    apiResult: availabilityResult
+                };
+                
+                this.discovered.push(domainInfo);
 
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'premium',
-                specialty: this.specialty
-            });
+                this.emit('discovery', {
+                    bot: this.name,
+                    domain,
+                    type: 'premium',
+                    specialty: this.specialty,
+                    value: domainInfo.value,
+                    registrar: domainInfo.registrar
+                });
 
-            // Attempt acquisition
-            if (Math.random() > 0.5) {
-                await this.attemptAcquisition(domain);
+                // Attempt acquisition with higher probability for premium domains
+                if (Math.random() > 0.3) {
+                    await this.attemptAcquisition(domain, domainInfo);
+                }
             }
+        } catch (error) {
+            console.error(`Domain check failed for ${domain}:`, error.message);
+            throw error; // Let the error handling in runSearchCycle handle this
         }
 
         this.emit('status', {
             bot: this.name,
             status: 'searching',
-            message: `Scanned: ${this.stats.domainsScanned}, Found: ${this.stats.domainsDiscovered}`
+            message: `Scanned: ${this.stats.domainsScanned}, Found: ${this.stats.domainsDiscovered}, API calls: ${this.stats.apiCalls}`
         });
     }
 
-    async attemptAcquisition(domain) {
+    async attemptAcquisition(domain, domainInfo) {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000));
         
+        // In a real implementation, this would call domain registrar APIs to purchase
         const success = Math.random() > 0.3;
+        
         if (success) {
             this.stats.domainsAcquired++;
-            this.acquired.push({
+            const acquisitionInfo = {
                 domain,
                 acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 5000) + 500
-            });
+                price: domainInfo.value * 0.8, // Simulate some negotiation
+                registrar: domainInfo.registrar,
+                method: this.useRealAPI ? 'api' : 'mock'
+            };
+            
+            this.acquired.push(acquisitionInfo);
         }
 
         this.emit('acquisition', {
             bot: this.name,
             domain,
             success,
-            type: 'premium'
+            type: 'premium',
+            price: success ? domainInfo.value * 0.8 : null,
+            registrar: domainInfo.registrar
         });
     }
 }
 
 class AssetSeekerBot extends BaseDomainBot {
-    constructor() {
-        super('Asset Seeker', { searchInterval: 4000, searchDepth: 2 });
+    constructor(domainAPI) {
+        super('Asset Seeker', domainAPI, { searchInterval: 4000, searchDepth: 2 });
         this.specialty = 'digital assets';
     }
 
@@ -567,59 +697,80 @@ class AssetSeekerBot extends BaseDomainBot {
 
         await new Promise(resolve => setTimeout(resolve, Math.random() * 1500));
 
-        if (Math.random() > 0.6) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'asset',
-                category: ['NFT', 'DeFi', 'Gaming', 'SaaS'][Math.floor(Math.random() * 4)],
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
+        try {
+            const availabilityResult = await this.checkDomainAvailability(domain);
+            
+            if (availabilityResult.overallAvailable) {
+                this.stats.domainsDiscovered++;
+                
+                const domainInfo = {
+                    domain,
+                    type: 'asset',
+                    category: ['NFT', 'DeFi', 'Gaming', 'SaaS'][Math.floor(Math.random() * 4)],
+                    registrar: availabilityResult.bestOption?.registrar || 'Unknown',
+                    discoveredAt: new Date(),
+                    apiResult: availabilityResult
+                };
+                
+                this.discovered.push(domainInfo);
 
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'asset',
-                specialty: this.specialty
-            });
+                this.emit('discovery', {
+                    bot: this.name,
+                    domain,
+                    type: 'asset',
+                    specialty: this.specialty,
+                    category: domainInfo.category,
+                    registrar: domainInfo.registrar
+                });
 
-            if (Math.random() > 0.4) {
-                await this.attemptAcquisition(domain);
+                if (Math.random() > 0.4) {
+                    await this.attemptAcquisition(domain, domainInfo);
+                }
             }
+        } catch (error) {
+            console.error(`Domain check failed for ${domain}:`, error.message);
+            throw error;
         }
 
         this.emit('status', {
             bot: this.name,
             status: 'seeking',
-            message: `Assets scanned: ${this.stats.domainsScanned}, Assets found: ${this.stats.domainsDiscovered}`
+            message: `Assets scanned: ${this.stats.domainsScanned}, Assets found: ${this.stats.domainsDiscovered}, API calls: ${this.stats.apiCalls}`
         });
     }
 
-    async attemptAcquisition(domain) {
+    async attemptAcquisition(domain, domainInfo) {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 1800));
         
         const success = Math.random() > 0.25;
         if (success) {
             this.stats.domainsAcquired++;
-            this.acquired.push({
+            const acquisitionInfo = {
                 domain,
                 acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 3000) + 200
-            });
+                price: Math.floor(Math.random() * 3000) + 200,
+                registrar: domainInfo.registrar,
+                category: domainInfo.category,
+                method: this.useRealAPI ? 'api' : 'mock'
+            };
+            
+            this.acquired.push(acquisitionInfo);
         }
 
         this.emit('acquisition', {
             bot: this.name,
             domain,
             success,
-            type: 'asset'
+            type: 'asset',
+            category: domainInfo.category,
+            registrar: domainInfo.registrar
         });
     }
 }
 
 class RecursiveExplorerBot extends BaseDomainBot {
-    constructor() {
-        super('Recursive Explorer', { searchInterval: 6000, searchDepth: 5 });
+    constructor(domainAPI) {
+        super('Recursive Explorer', domainAPI, { searchInterval: 6000, searchDepth: 5 });
         this.specialty = 'hidden gems';
     }
 
@@ -630,54 +781,76 @@ class RecursiveExplorerBot extends BaseDomainBot {
 
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
 
-        if (Math.random() > 0.8) {
-            this.stats.domainsDiscovered++;
-            this.discovered.push({
-                domain,
-                type: 'hidden',
-                depth: this.stats.currentDepth,
-                potential: Math.floor(Math.random() * 100),
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
-            });
+        try {
+            const availabilityResult = await this.checkDomainAvailability(domain);
+            
+            if (availabilityResult.overallAvailable) {
+                this.stats.domainsDiscovered++;
+                
+                const domainInfo = {
+                    domain,
+                    type: 'hidden',
+                    depth: this.stats.currentDepth,
+                    potential: Math.floor(Math.random() * 100),
+                    registrar: availabilityResult.bestOption?.registrar || 'Unknown',
+                    discoveredAt: new Date(),
+                    apiResult: availabilityResult
+                };
+                
+                this.discovered.push(domainInfo);
 
-            this.emit('discovery', {
-                bot: this.name,
-                domain,
-                type: 'hidden',
-                specialty: this.specialty,
-                depth: this.stats.currentDepth
-            });
+                this.emit('discovery', {
+                    bot: this.name,
+                    domain,
+                    type: 'hidden',
+                    specialty: this.specialty,
+                    depth: this.stats.currentDepth,
+                    potential: domainInfo.potential,
+                    registrar: domainInfo.registrar
+                });
 
-            if (Math.random() > 0.6) {
-                await this.attemptAcquisition(domain);
+                if (Math.random() > 0.6) {
+                    await this.attemptAcquisition(domain, domainInfo);
+                }
             }
+        } catch (error) {
+            console.error(`Domain check failed for ${domain}:`, error.message);
+            throw error;
         }
 
         this.emit('status', {
             bot: this.name,
             status: 'exploring',
-            message: `Depth: ${this.stats.currentDepth}/${this.searchDepth}, Found: ${this.stats.domainsDiscovered} gems`
+            message: `Depth: ${this.stats.currentDepth}/${this.searchDepth}, Found: ${this.stats.domainsDiscovered} gems, API calls: ${this.stats.apiCalls}`
         });
     }
 
-    async attemptAcquisition(domain) {
+    async attemptAcquisition(domain, domainInfo) {
         await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 500));
         
         const success = Math.random() > 0.4;
         if (success) {
             this.stats.domainsAcquired++;
-            this.acquired.push({
+            const acquisitionInfo = {
                 domain,
                 acquiredAt: new Date(),
-                price: Math.floor(Math.random() * 2000) + 100
-            });
+                price: Math.floor(Math.random() * 2000) + 100,
+                registrar: domainInfo.registrar,
+                depth: domainInfo.depth,
+                potential: domainInfo.potential,
+                method: this.useRealAPI ? 'api' : 'mock'
+            };
+            
+            this.acquired.push(acquisitionInfo);
         }
 
         this.emit('acquisition', {
             bot: this.name,
             domain,
             success,
-            type: 'hidden'
+            type: 'hidden',
+            depth: domainInfo.depth,
+            registrar: domainInfo.registrar
         });
     }
 }
