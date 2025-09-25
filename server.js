@@ -7,10 +7,12 @@ const http = require('http');
 const socketIo = require('socket.io');
 const fs = require('fs').promises;
 const BotManager = require('./bots/botManager');
+const PerformanceMonitor = require('./utils/performance');
 require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
+const performanceMonitor = new PerformanceMonitor();
 const io = socketIo(server, {
     // Security settings for WebSocket
     cors: {
@@ -82,6 +84,19 @@ ensureDirectories().catch(console.error);
 // Initialize bot manager
 const botManager = new BotManager();
 
+// Performance monitoring setup
+performanceMonitor.on('alert', (alertData) => {
+    console.warn(`🚨 Performance Alert: ${alertData.type}`, alertData.data);
+    // Send webhook notification if configured
+    if (process.env.WEBHOOK_URL) {
+        // You could add webhook notification logic here
+    }
+});
+
+performanceMonitor.on('alertCleared', (alertData) => {
+    console.log(`✅ Performance Alert Cleared: ${alertData.type}`);
+});
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -117,6 +132,9 @@ app.use(express.static('.', {
 // Apply rate limiting to API routes
 app.use('/api', rateLimit);
 
+// Add performance monitoring middleware
+app.use(performanceMonitor.middleware());
+
 // Service pricing configuration
 const SERVICES = {
     website: {
@@ -136,18 +154,21 @@ const SERVICES = {
     }
 };
 
-// Health check endpoint for monitoring and Docker
+// Enhanced health check endpoint with performance metrics
 app.get('/health', async (req, res) => {
     try {
         const healthStatus = await botManager.getHealthStatus();
         const memUsage = process.memoryUsage();
         const uptime = process.uptime();
+        const performanceHealth = performanceMonitor.getHealthSummary();
         
         // Check critical thresholds
         const memoryThreshold = parseInt(process.env.MAX_MEMORY_MB) || 500;
         const isMemoryHealthy = (memUsage.heapUsed / 1024 / 1024) < memoryThreshold;
         
-        const overallHealthy = healthStatus.status === 'healthy' && isMemoryHealthy;
+        const overallHealthy = healthStatus.status === 'healthy' && 
+                              isMemoryHealthy && 
+                              performanceHealth.status !== 'degraded';
         
         const response = {
             status: overallHealthy ? 'healthy' : 'unhealthy',
@@ -160,6 +181,7 @@ app.get('/health', async (req, res) => {
                 limit: memoryThreshold,
                 healthy: isMemoryHealthy
             },
+            performance: performanceHealth,
             stats: healthStatus.stats,
             version: process.env.npm_package_version || '1.0.0',
             environment: process.env.NODE_ENV || 'development',
@@ -178,6 +200,17 @@ app.get('/health', async (req, res) => {
             error: error.message,
             uptime: Math.floor(process.uptime())
         });
+    }
+});
+
+// Performance metrics endpoint
+app.get('/api/performance', (req, res) => {
+    try {
+        const metrics = performanceMonitor.getMetrics();
+        res.json(metrics);
+    } catch (error) {
+        console.error('Performance metrics error:', error);
+        res.status(500).json({ error: 'Failed to get performance metrics' });
     }
 });
 
