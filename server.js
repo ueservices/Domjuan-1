@@ -11,8 +11,58 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = socketIo(server, {
+    // Security settings for WebSocket
+    cors: {
+        origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : "*",
+        methods: ["GET", "POST"]
+    },
+    transports: ['websocket', 'polling']
+});
 const PORT = process.env.PORT || 3000;
+
+// Rate limiting configuration
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 100;
+
+// Rate limiting middleware
+const rateLimit = (req, res, next) => {
+    const clientIP = req.ip || req.connection.remoteAddress;
+    const now = Date.now();
+    
+    if (!rateLimitMap.has(clientIP)) {
+        rateLimitMap.set(clientIP, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+        return next();
+    }
+    
+    const clientData = rateLimitMap.get(clientIP);
+    
+    if (now > clientData.resetTime) {
+        clientData.count = 1;
+        clientData.resetTime = now + RATE_LIMIT_WINDOW;
+        return next();
+    }
+    
+    if (clientData.count >= MAX_REQUESTS_PER_WINDOW) {
+        return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    }
+    
+    clientData.count++;
+    next();
+};
+
+// Input validation helpers
+const validateDomain = (domain) => {
+    if (!domain || typeof domain !== 'string') return false;
+    const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
+    return domainRegex.test(domain) && domain.length <= 253;
+};
+
+const sanitizeInput = (input) => {
+    if (typeof input !== 'string') return '';
+    return input.replace(/[<>\"']/g, '').trim();
+};
 
 // Ensure required directories exist
 async function ensureDirectories() {
@@ -41,13 +91,31 @@ app.use(helmet({
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             scriptSrc: ["'self'", "https://js.stripe.com"],
             frameSrc: ["https://js.stripe.com"],
-            connectSrc: ["'self'", "https://api.stripe.com"]
+            connectSrc: ["'self'", "https://api.stripe.com", "wss:", "ws:"]
+        }
+    },
+    crossOriginEmbedderPolicy: false
+}));
+
+app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : "*",
+    credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.static('.', {
+    dotfiles: 'deny',
+    index: false,
+    setHeaders: (res, path) => {
+        if (path.endsWith('.html')) {
+            res.setHeader('X-Frame-Options', 'DENY');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
         }
     }
 }));
-app.use(cors());
-app.use(express.json());
-app.use(express.static('.'));
+
+// Apply rate limiting to API routes
+app.use('/api', rateLimit);
 
 // Service pricing configuration
 const SERVICES = {
@@ -72,19 +140,43 @@ const SERVICES = {
 app.get('/health', async (req, res) => {
     try {
         const healthStatus = await botManager.getHealthStatus();
-        res.status(healthStatus.status === 'healthy' ? 200 : 503).json({
-            status: healthStatus.status,
+        const memUsage = process.memoryUsage();
+        const uptime = process.uptime();
+        
+        // Check critical thresholds
+        const memoryThreshold = parseInt(process.env.MAX_MEMORY_MB) || 500;
+        const isMemoryHealthy = (memUsage.heapUsed / 1024 / 1024) < memoryThreshold;
+        
+        const overallHealthy = healthStatus.status === 'healthy' && isMemoryHealthy;
+        
+        const response = {
+            status: overallHealthy ? 'healthy' : 'unhealthy',
             timestamp: new Date().toISOString(),
-            uptime: healthStatus.uptime,
-            bots: healthStatus.botsActive + '/' + healthStatus.totalBots,
-            memory: healthStatus.memory,
-            stats: healthStatus.stats
-        });
+            uptime: Math.floor(uptime),
+            bots: `${healthStatus.botsActive}/${healthStatus.totalBots}`,
+            memory: {
+                used: Math.round(memUsage.heapUsed / 1024 / 1024),
+                total: Math.round(memUsage.heapTotal / 1024 / 1024),
+                limit: memoryThreshold,
+                healthy: isMemoryHealthy
+            },
+            stats: healthStatus.stats,
+            version: process.env.npm_package_version || '1.0.0',
+            environment: process.env.NODE_ENV || 'development',
+            apiLimits: {
+                dailyUsed: healthStatus.stats.apiCallsToday || 0,
+                dailyLimit: parseInt(process.env.MAX_API_CALLS_PER_DAY) || 1000
+            }
+        };
+        
+        res.status(overallHealthy ? 200 : 503).json(response);
     } catch (error) {
+        console.error('Health check error:', error);
         res.status(500).json({
             status: 'error',
             timestamp: new Date().toISOString(),
-            error: error.message
+            error: error.message,
+            uptime: Math.floor(process.uptime())
         });
     }
 });
@@ -99,7 +191,29 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
-// Bot control endpoints
+// Domain validation endpoint
+app.post('/api/validate-domain', (req, res) => {
+    try {
+        const { domain } = req.body;
+        
+        if (!domain) {
+            return res.status(400).json({ error: 'Domain is required' });
+        }
+        
+        const sanitizedDomain = sanitizeInput(domain);
+        const isValid = validateDomain(sanitizedDomain);
+        
+        res.json({
+            domain: sanitizedDomain,
+            valid: isValid,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Domain validation failed' });
+    }
+});
+
+// Enhanced bot control endpoints with validation
 app.post('/api/restart-bots', (req, res) => {
     try {
         botManager.stopAllBots();
@@ -112,9 +226,10 @@ app.post('/api/restart-bots', (req, res) => {
             });
         }, 2000);
     } catch (error) {
+        console.error('Bot restart error:', error);
         res.status(500).json({ 
             success: false, 
-            error: error.message 
+            error: 'Failed to restart bots: ' + error.message
         });
     }
 });
@@ -183,8 +298,11 @@ app.get('/dashboard', (req, res) => {
 // Serve configuration
 app.get('/config.js', (req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.send(`
         window.STRIPE_PUBLISHABLE_KEY = '${process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_51234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890'}';
+        window.API_BASE_URL = '${process.env.API_BASE_URL || ''}';
+        window.ENVIRONMENT = '${process.env.NODE_ENV || 'development'}';
     `);
 });
 
@@ -193,25 +311,34 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Create payment intent
+// Create payment intent with enhanced validation
 app.post('/create-payment-intent', async (req, res) => {
     try {
         const { service, amount } = req.body;
         
+        // Validate input
+        if (!service || !amount) {
+            return res.status(400).json({ error: 'Service and amount are required' });
+        }
+        
+        const sanitizedService = sanitizeInput(service);
+        
         // Validate service and amount
-        if (!SERVICES[service] || SERVICES[service].price !== amount) {
+        if (!SERVICES[sanitizedService] || SERVICES[sanitizedService].price !== amount) {
             return res.status(400).json({ error: 'Invalid service or amount' });
         }
         
-        const serviceInfo = SERVICES[service];
+        const serviceInfo = SERVICES[sanitizedService];
         
         // Create a PaymentIntent with the order amount and currency
         const paymentIntent = await stripe.paymentIntents.create({
             amount: serviceInfo.price,
             currency: 'usd',
             metadata: {
-                service: service,
-                service_name: serviceInfo.name
+                service: sanitizedService,
+                service_name: serviceInfo.name,
+                client_ip: req.ip,
+                timestamp: new Date().toISOString()
             },
             description: serviceInfo.description
         });
@@ -221,7 +348,13 @@ app.post('/create-payment-intent', async (req, res) => {
         });
     } catch (error) {
         console.error('Payment intent creation error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        
+        // Don't expose internal errors to client
+        if (error.type === 'StripeCardError') {
+            res.status(400).json({ error: 'Payment processing error' });
+        } else {
+            res.status(500).json({ error: 'Internal server error' });
+        }
     }
 });
 

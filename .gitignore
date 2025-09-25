@@ -24,7 +24,7 @@ coverage/
 .env.production.local
 
 # Logs
-logs
+logs/
 *.log
 
 # Runtime data
@@ -57,9 +57,29 @@ build/
 data/
 backups/
 test_export.json
+test_export.csv
 
 # PM2 logs and runtime
 .pm2/
 
 # Docker volumes and data
 docker-data/
+
+# Test artifacts
+server.pid
+
+# Security and sensitive files
+*.key
+*.pem
+*.p12
+.credentials
+config/production.json
+
+# Backup files
+*.backup
+*.bak
+
+# Editor backups
+*~
+*.swp
+*.swo
