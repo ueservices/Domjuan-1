@@ -18,6 +18,8 @@ const BotManager = require('./bots/botManager');
 // Import routes
 const { router: apiRouter, createBotRoutes } = require('./routes/api');
 const paymentsRouter = require('./routes/payments');
+const analyticsRouter = require('./routes/analytics');
+const backupRouter = require('./routes/backup');
 const { router: healthRouter, createDetailedHealthCheck } = require('./routes/health');
 
 const app = express();
@@ -82,6 +84,8 @@ app.use(express.static('.'));
 createBotRoutes(botManager); // Initialize bot routes with manager
 app.use('/api', apiRouter);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/analytics', analyticsRouter);
+app.use('/api/backup', backupRouter);
 
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, swaggerOptions));

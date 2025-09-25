@@ -5,9 +5,73 @@ const logger = require('../config/logger');
 const { rateLimiters, createValidation, validationRules } = require('../middleware/security');
 const { SERVICES } = require('./api');
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PaymentIntent:
+ *       type: object
+ *       required:
+ *         - service
+ *         - amount
+ *       properties:
+ *         service:
+ *           type: string
+ *           enum: [website, ecommerce, consultation]
+ *           description: Service type to purchase
+ *         amount:
+ *           type: integer
+ *           minimum: 1
+ *           description: Amount in cents
+ *     PaymentResponse:
+ *       type: object
+ *       properties:
+ *         clientSecret:
+ *           type: string
+ *           description: Stripe payment intent client secret
+ *         amount:
+ *           type: integer
+ *           description: Payment amount in cents
+ *         service:
+ *           type: string
+ *           description: Service name
+ */
+
 // Apply payment-specific rate limiting
 router.use(rateLimiters.payment);
 
+/**
+ * @swagger
+ * /api/payments/create-payment-intent:
+ *   post:
+ *     summary: Create a payment intent for service purchase
+ *     tags: [Payments]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PaymentIntent'
+ *     responses:
+ *       200:
+ *         description: Payment intent created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaymentResponse'
+ *       400:
+ *         description: Invalid service or amount
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Payment processing error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // Create payment intent with validation
 router.post('/create-payment-intent', 
     createValidation(validationRules.paymentIntent),
@@ -68,6 +132,34 @@ router.post('/create-payment-intent',
     }
 );
 
+/**
+ * @swagger
+ * /api/payments/webhook:
+ *   post:
+ *     summary: Stripe webhook endpoint for payment events
+ *     tags: [Payments]
+ *     description: Handles Stripe webhook events for payment processing
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             description: Stripe webhook event payload
+ *     responses:
+ *       200:
+ *         description: Webhook processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 received:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Webhook signature verification failed
+ */
 // Stripe webhook endpoint
 router.post('/webhook', 
     express.raw({ type: 'application/json' }),
