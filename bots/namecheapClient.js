@@ -14,7 +14,14 @@ class NamecheapClient {
         this.clientIp = process.env.NAMECHEAP_CLIENT_IP || '127.0.0.1';
         
         if (!this.apiUser || !this.apiKey) {
-            throw new Error('Namecheap API credentials not found. Please set NAMECHEAP_API_USER and NAMECHEAP_API_KEY environment variables.');
+            const message = 'Namecheap API credentials not found. Please set NAMECHEAP_API_USER and NAMECHEAP_API_KEY environment variables.';
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(message);
+            } else {
+                console.warn(`Namecheap Client: ${message} Running in demo mode.`);
+                this.demoMode = true;
+                return;
+            }
         }
         
         this.baseURL = 'https://api.namecheap.com/xml.response';
@@ -26,6 +33,7 @@ class NamecheapClient {
         // Rate limiting
         this.lastRequestTime = 0;
         this.minRequestInterval = 1000; // 1 second between requests
+        this.demoMode = false;
         
         this.parser = new xml2js.Parser({ explicitArray: false });
     }
@@ -85,6 +93,18 @@ class NamecheapClient {
      * @returns {Promise<{available: boolean, domain: string}>}
      */
     async checkDomainAvailability(domain) {
+        if (this.demoMode) {
+            console.log(`[Namecheap Demo] Simulating availability check for: ${domain}`);
+            // Return demo data
+            return {
+                domain,
+                available: Math.random() > 0.7,
+                isPremium: Math.random() > 0.8,
+                premiumRegistrationPrice: Math.random() > 0.8 ? Math.floor(Math.random() * 100) + 20 : null,
+                registrar: 'Namecheap'
+            };
+        }
+        
         try {
             const result = await this.makeRequest('namecheap.domains.check', {
                 DomainList: domain
@@ -142,6 +162,25 @@ class NamecheapClient {
      * @returns {Promise<Array>}
      */
     async searchDomains(query, tlds = ['.com', '.net', '.org', '.info', '.biz']) {
+        if (this.demoMode) {
+            console.log(`[Namecheap Demo] Simulating domain search for: ${query}`);
+            // Return demo available domains
+            const demoResults = [];
+            for (const tld of tlds.slice(0, 3)) { // Limit for demo
+                if (Math.random() > 0.6) {
+                    demoResults.push({
+                        domain: `${query}${tld}`,
+                        available: true,
+                        isPremium: Math.random() > 0.8,
+                        premiumRegistrationPrice: Math.random() > 0.8 ? Math.floor(Math.random() * 100) + 20 : null,
+                        registrar: 'Namecheap',
+                        type: this.categorizeDomain(`${query}${tld}`)
+                    });
+                }
+            }
+            return demoResults;
+        }
+        
         try {
             const domains = tlds.map(tld => `${query}${tld}`);
             const results = await this.checkMultipleDomains(domains);
@@ -191,6 +230,29 @@ class NamecheapClient {
      * @returns {Promise<Array>}
      */
     async generateDomainVariations(baseDomain, tlds = ['.com', '.net', '.org', '.io', '.ai']) {
+        if (this.demoMode) {
+            console.log(`[Namecheap Demo] Generating variations for: ${baseDomain}`);
+            const demoVariations = [];
+            const suffixes = ['app', 'pro', 'hub'];
+            
+            suffixes.forEach(suffix => {
+                tlds.slice(0, 2).forEach(tld => {
+                    if (Math.random() > 0.7) {
+                        demoVariations.push({
+                            domain: `${baseDomain}${suffix}${tld}`,
+                            available: true,
+                            isPremium: false,
+                            premiumRegistrationPrice: null,
+                            registrar: 'Namecheap',
+                            type: this.categorizeDomain(`${baseDomain}${suffix}${tld}`)
+                        });
+                    }
+                });
+            });
+            
+            return demoVariations;
+        }
+        
         const variations = [];
         const suffixes = ['app', 'pro', 'hub', 'lab', 'zone', 'tech', 'digital'];
         const prefixes = ['get', 'my', 'the', 'new', 'smart'];

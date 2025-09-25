@@ -391,7 +391,17 @@ class BaseDomainBot extends EventEmitter {
             console.log(`[${this.name}] API clients initialized successfully`);
         } catch (error) {
             console.error(`[${this.name}] Failed to initialize API clients:`, error.message);
-            throw new Error(`Bot initialization failed: ${error.message}`);
+            
+            // In production, API credentials are required
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(`Bot initialization failed: ${error.message}`);
+            } else {
+                // In development, warn but allow the bot to run in demo mode
+                console.warn(`[${this.name}] Running in development mode without API credentials - bot will operate in demo mode`);
+                this.godaddyClient = null;
+                this.namecheapClient = null;
+                this.demoMode = true;
+            }
         }
     }
 
@@ -484,12 +494,18 @@ class BaseDomainBot extends EventEmitter {
      * @returns {Array<string>}
      */
     generateSearchQueries(registrar = 'godaddy') {
-        if (registrar === 'godaddy') {
+        if (this.demoMode) {
+            // Return demo queries
+            return ['crypto', 'ai', 'nft', 'tech', 'digital', 'web3', 'defi', 'blockchain', 'fintech', 'saas'];
+        }
+        
+        if (registrar === 'godaddy' && this.godaddyClient) {
             return this.godaddyClient.generateSearchQueries();
-        } else if (registrar === 'namecheap') {
+        } else if (registrar === 'namecheap' && this.namecheapClient) {
             return this.namecheapClient.generateTrendingQueries();
         } else {
-            throw new Error(`Unknown registrar: ${registrar}`);
+            // Fallback queries
+            return ['crypto', 'ai', 'nft', 'tech', 'digital', 'web3', 'defi', 'blockchain'];
         }
     }
 
@@ -501,12 +517,32 @@ class BaseDomainBot extends EventEmitter {
      */
     async searchDomains(query, registrar = 'godaddy') {
         try {
-            if (registrar === 'godaddy') {
+            if (this.demoMode) {
+                console.log(`[${this.name}] Demo mode: simulating search for ${query} on ${registrar}`);
+                // Return some demo results
+                const demoResults = [];
+                const tlds = ['.com', '.net', '.org', '.io'];
+                for (let i = 0; i < 2; i++) {
+                    if (Math.random() > 0.6) {
+                        const tld = tlds[Math.floor(Math.random() * tlds.length)];
+                        demoResults.push({
+                            domain: `${query}${Math.floor(Math.random() * 999)}${tld}`,
+                            available: true,
+                            price: Math.floor(Math.random() * 50) + 10,
+                            registrar: registrar.charAt(0).toUpperCase() + registrar.slice(1),
+                            type: 'demo'
+                        });
+                    }
+                }
+                return demoResults;
+            }
+            
+            if (registrar === 'godaddy' && this.godaddyClient) {
                 return await this.godaddyClient.searchDomains(query);
-            } else if (registrar === 'namecheap') {
+            } else if (registrar === 'namecheap' && this.namecheapClient) {
                 return await this.namecheapClient.searchDomains(query);
             } else {
-                throw new Error(`Unknown registrar: ${registrar}`);
+                throw new Error(`API client not available for ${registrar}`);
             }
         } catch (error) {
             console.error(`[${this.name}] Domain search failed for ${query} on ${registrar}:`, error.message);
@@ -522,12 +558,22 @@ class BaseDomainBot extends EventEmitter {
      */
     async checkDomainAvailability(domain, registrar = 'godaddy') {
         try {
-            if (registrar === 'godaddy') {
+            if (this.demoMode) {
+                console.log(`[${this.name}] Demo mode: simulating availability check for ${domain} on ${registrar}`);
+                return {
+                    domain,
+                    available: Math.random() > 0.7,
+                    price: Math.floor(Math.random() * 50) + 10,
+                    registrar: registrar.charAt(0).toUpperCase() + registrar.slice(1)
+                };
+            }
+            
+            if (registrar === 'godaddy' && this.godaddyClient) {
                 return await this.godaddyClient.checkDomainAvailability(domain);
-            } else if (registrar === 'namecheap') {
+            } else if (registrar === 'namecheap' && this.namecheapClient) {
                 return await this.namecheapClient.checkDomainAvailability(domain);
             } else {
-                throw new Error(`Unknown registrar: ${registrar}`);
+                throw new Error(`API client not available for ${registrar}`);
             }
         } catch (error) {
             console.error(`[${this.name}] Domain availability check failed for ${domain} on ${registrar}:`, error.message);

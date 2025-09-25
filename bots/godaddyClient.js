@@ -11,7 +11,14 @@ class GoDaddyClient {
         this.apiSecret = process.env.GODADDY_API_SECRET;
         
         if (!this.apiKey || !this.apiSecret) {
-            throw new Error('GoDaddy API credentials not found. Please set GODADDY_API_KEY and GODADDY_API_SECRET environment variables.');
+            const message = 'GoDaddy API credentials not found. Please set GODADDY_API_KEY and GODADDY_API_SECRET environment variables.';
+            if (process.env.NODE_ENV === 'production') {
+                throw new Error(message);
+            } else {
+                console.warn(`GoDaddy Client: ${message} Running in demo mode.`);
+                this.demoMode = true;
+                return;
+            }
         }
         
         this.baseURL = 'https://api.godaddy.com/v1';
@@ -24,6 +31,7 @@ class GoDaddyClient {
         // Rate limiting
         this.lastRequestTime = 0;
         this.minRequestInterval = 1000; // 1 second between requests to respect rate limits
+        this.demoMode = false;
     }
 
     async makeRequest(endpoint, method = 'GET', data = null) {
@@ -70,6 +78,18 @@ class GoDaddyClient {
      * @returns {Promise<{available: boolean, domain: string, price?: number}>}
      */
     async checkDomainAvailability(domain) {
+        if (this.demoMode) {
+            console.log(`[GoDaddy Demo] Simulating availability check for: ${domain}`);
+            // Return demo data
+            return {
+                domain,
+                available: Math.random() > 0.7,
+                price: Math.floor(Math.random() * 50) + 10,
+                currency: 'USD',
+                period: 1
+            };
+        }
+        
         try {
             const endpoint = `/domains/available?domain=${encodeURIComponent(domain)}`;
             const result = await this.makeRequest(endpoint);
@@ -94,6 +114,25 @@ class GoDaddyClient {
      * @returns {Promise<Array>}
      */
     async searchDomains(query, tlds = ['.com', '.net', '.org', '.io']) {
+        if (this.demoMode) {
+            console.log(`[GoDaddy Demo] Simulating domain search for: ${query}`);
+            // Return demo available domains
+            const demoResults = [];
+            for (const tld of tlds.slice(0, 2)) { // Limit for demo
+                if (Math.random() > 0.6) {
+                    demoResults.push({
+                        domain: `${query}${tld}`,
+                        available: true,
+                        price: Math.floor(Math.random() * 50) + 10,
+                        currency: 'USD',
+                        registrar: 'GoDaddy',
+                        type: this.categorizeDomain(`${query}${tld}`)
+                    });
+                }
+            }
+            return demoResults;
+        }
+        
         try {
             const suggestions = [];
             
