@@ -1,5 +1,7 @@
 const express = require('express');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_...');
+const stripe = require('stripe')(
+    process.env.STRIPE_SECRET_KEY || 'sk_test_...'
+);
 const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path');
@@ -33,18 +35,24 @@ ensureDirectories().catch(console.error);
 const botManager = new BotManager();
 
 // Middleware
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            scriptSrc: ["'self'", "https://js.stripe.com"],
-            frameSrc: ["https://js.stripe.com"],
-            connectSrc: ["'self'", "https://api.stripe.com"]
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: [
+                    "'self'",
+                    "'unsafe-inline'",
+                    'https://fonts.googleapis.com'
+                ],
+                fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+                scriptSrc: ["'self'", 'https://js.stripe.com'],
+                frameSrc: ['https://js.stripe.com'],
+                connectSrc: ["'self'", 'https://api.stripe.com']
+            }
         }
-    }
-}));
+    })
+);
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
@@ -105,16 +113,16 @@ app.post('/api/restart-bots', (req, res) => {
         botManager.stopAllBots();
         setTimeout(() => {
             botManager.startAllBots();
-            res.json({ 
-                success: true, 
+            res.json({
+                success: true,
                 message: 'Bots restarted successfully',
                 timestamp: new Date().toISOString()
             });
         }, 2000);
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -122,15 +130,15 @@ app.post('/api/restart-bots', (req, res) => {
 app.post('/api/start-bots', (req, res) => {
     try {
         botManager.startAllBots();
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Bots started successfully',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -138,15 +146,15 @@ app.post('/api/start-bots', (req, res) => {
 app.post('/api/stop-bots', (req, res) => {
     try {
         botManager.stopAllBots();
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Bots stopped successfully',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            error: error.message 
+        res.status(500).json({
+            success: false,
+            error: error.message
         });
     }
 });
@@ -155,7 +163,10 @@ app.post('/api/stop-bots', (req, res) => {
 app.get('/api/export/json', async (req, res) => {
     try {
         const { jsonPath } = await botManager.exportAllData();
-        res.download(jsonPath, `domjuan-export-${new Date().toISOString().split('T')[0]}.json`);
+        res.download(
+            jsonPath,
+            `domjuan-export-${new Date().toISOString().split('T')[0]}.json`
+        );
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -164,7 +175,10 @@ app.get('/api/export/json', async (req, res) => {
 app.get('/api/export/csv', async (req, res) => {
     try {
         const { csvPath } = await botManager.exportAllData();
-        res.download(csvPath, `domjuan-domains-${new Date().toISOString().split('T')[0]}.csv`);
+        res.download(
+            csvPath,
+            `domjuan-domains-${new Date().toISOString().split('T')[0]}.csv`
+        );
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -197,14 +211,14 @@ app.get('/health', (req, res) => {
 app.post('/create-payment-intent', async (req, res) => {
     try {
         const { service, amount } = req.body;
-        
+
         // Validate service and amount
         if (!SERVICES[service] || SERVICES[service].price !== amount) {
             return res.status(400).json({ error: 'Invalid service or amount' });
         }
-        
+
         const serviceInfo = SERVICES[service];
-        
+
         // Create a PaymentIntent with the order amount and currency
         const paymentIntent = await stripe.paymentIntents.create({
             amount: serviceInfo.price,
@@ -215,7 +229,7 @@ app.post('/create-payment-intent', async (req, res) => {
             },
             description: serviceInfo.description
         });
-        
+
         res.json({
             client_secret: paymentIntent.client_secret
         });
@@ -226,19 +240,19 @@ app.post('/create-payment-intent', async (req, res) => {
 });
 
 // Stripe webhook endpoint (for production)
-app.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    
+
     let event;
-    
+
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (err) {
         console.log(`Webhook signature verification failed.`, err.message);
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-    
+
     // Handle the event
     switch (event.type) {
         case 'payment_intent.succeeded':
@@ -248,13 +262,16 @@ app.post('/webhook', express.raw({type: 'application/json'}), (req, res) => {
             break;
         case 'payment_method.attached':
             const paymentMethod = event.data.object;
-            console.log('PaymentMethod was attached to a Customer!', paymentMethod.id);
+            console.log(
+                'PaymentMethod was attached to a Customer!',
+                paymentMethod.id
+            );
             break;
         default:
             console.log(`Unhandled event type ${event.type}`);
     }
-    
-    res.json({received: true});
+
+    res.json({ received: true });
 });
 
 // API endpoints for services
@@ -297,18 +314,25 @@ app.post('/api/bots/stop', (req, res) => {
 app.get('/api/export/:format', (req, res) => {
     const { format } = req.params;
     const stats = botManager.getAllStats();
-    
+
     if (format === 'json') {
-        res.setHeader('Content-Disposition', 'attachment; filename=bot-data.json');
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=bot-data.json'
+        );
         res.setHeader('Content-Type', 'application/json');
         res.json(stats);
     } else if (format === 'csv') {
-        res.setHeader('Content-Disposition', 'attachment; filename=bot-data.csv');
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=bot-data.csv'
+        );
         res.setHeader('Content-Type', 'text/csv');
-        
+
         // Generate CSV data
-        let csv = 'Bot,Status,Domains Scanned,Domains Discovered,Domains Acquired,Errors\n';
-        stats.bots.forEach(bot => {
+        let csv =
+            'Bot,Status,Domains Scanned,Domains Discovered,Domains Acquired,Errors\n';
+        stats.bots.forEach((bot) => {
             csv += `${bot.name},${bot.status.isActive ? 'Active' : 'Inactive'},${bot.status.stats.domainsScanned},${bot.status.stats.domainsDiscovered},${bot.status.stats.domainsAcquired},${bot.status.stats.errors}\n`;
         });
         res.send(csv);
@@ -318,7 +342,7 @@ app.get('/api/export/:format', (req, res) => {
 });
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });
@@ -331,18 +355,18 @@ app.use((req, res) => {
 // WebSocket connection handling
 io.on('connection', (socket) => {
     console.log('Client connected to dashboard');
-    
+
     // Send current stats on connection
     socket.emit('stats', botManager.getAllStats());
-    
+
     socket.on('startBots', () => {
         botManager.startAllBots();
     });
-    
+
     socket.on('stopBots', () => {
         botManager.stopAllBots();
     });
-    
+
     socket.on('disconnect', () => {
         console.log('Client disconnected from dashboard');
     });
@@ -372,7 +396,9 @@ botManager.on('allBotsStopped', (data) => {
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
     console.log(`Portfolio available at http://localhost:${PORT}`);
-    console.log(`Bot Dashboard available at http://localhost:${PORT}/dashboard`);
+    console.log(
+        `Bot Dashboard available at http://localhost:${PORT}/dashboard`
+    );
 });
 
 module.exports = app;

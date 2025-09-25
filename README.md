@@ -9,7 +9,7 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 ## 🌟 Autonomous Features
 
 - **🔄 Self-Healing**: Bots automatically restart after failures with exponential backoff
-- **📊 Zero-Touch Monitoring**: Continuous health checks with Discord/Slack alerts  
+- **📊 Zero-Touch Monitoring**: Continuous health checks with Discord/Slack alerts
 - **💾 Automated Backups**: Daily backups with configurable retention and cleanup
 - **📈 Real-time Analytics**: Live dashboard with performance metrics and export capabilities
 - **🚀 CI/CD Integration**: Automatic deployments via GitHub Actions
@@ -38,6 +38,7 @@ An advanced autonomous domain discovery system featuring three specialized bots 
 ## 🚀 Quick Start - Autonomous Setup
 
 ### Option 1: Docker (Recommended for Production)
+
 ```bash
 git clone https://github.com/ueservices/Domjuan-1.git
 cd Domjuan-1
@@ -54,6 +55,7 @@ curl http://localhost:3000/health
 ```
 
 ### Option 2: Traditional Setup
+
 ```bash
 git clone https://github.com/ueservices/Domjuan-1.git
 cd Domjuan-1
@@ -67,6 +69,7 @@ npm run pm2:start
 ```
 
 **System URLs:**
+
 - **Bot Dashboard**: http://localhost:3000/dashboard (Real-time monitoring)
 - **Health Check**: http://localhost:3000/health (System status)
 - **Portfolio Site**: http://localhost:3000 (Main site)
@@ -80,35 +83,41 @@ npm run pm2:start
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/ueservices/Domjuan-1.git
 cd Domjuan-1
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the server:
+
 ```bash
 npm start
 ```
 
 4. Access the applications:
-   - **Bot Dashboard**: http://localhost:3000/dashboard
-   - Portfolio Site: http://localhost:3000
+    - **Bot Dashboard**: http://localhost:3000/dashboard
+    - Portfolio Site: http://localhost:3000
 
 ## 📊 Autonomous Operations
 
 ### Self-Healing & Recovery
+
 The system automatically handles failures without manual intervention:
+
 - Individual bot restart with exponential backoff
 - System-wide health monitoring and alerting
 - Automatic resource management and cleanup
 - Data backup verification and rotation
 
 ### Zero-Touch Monitoring
+
 ```bash
 # System health (JSON response)
 curl http://localhost:3000/health
@@ -122,6 +131,7 @@ curl -X POST http://localhost:3000/api/restart-bots
 ```
 
 ### Automated Data Management
+
 - **Continuous Export**: JSON/CSV exports every 5 minutes
 - **Daily Backups**: Compressed backups with 30-day retention
 - **Log Rotation**: Automatic cleanup of application logs
@@ -132,12 +142,14 @@ See [AUTONOMOUS_OPERATIONS.md](./AUTONOMOUS_OPERATIONS.md) for complete autonomo
 ## 🎯 Using the Bot Dashboard
 
 ### Starting Bot Operations
+
 1. Navigate to http://localhost:3000/dashboard
 2. Click **"Start All Bots"** to begin domain discovery
 3. Monitor real-time updates in the activity log
 4. Watch live statistics and visualizations
 
 ### Dashboard Features
+
 - **Real-time Statistics**: Total domains discovered, successful acquisitions, system uptime
 - **Bot Status Cards**: Individual bot monitoring with progress indicators
 - **Discovery Timeline**: Visual progress bars showing bot performance
@@ -145,8 +157,9 @@ See [AUTONOMOUS_OPERATIONS.md](./AUTONOMOUS_OPERATIONS.md) for complete autonomo
 - **Data Export**: Download complete bot data in JSON or CSV format
 
 ### Bot Specializations
+
 - **🏹 Domain Hunter**: Premium domains (3s intervals, depth 3)
-- **💎 Asset Seeker**: Digital assets (4s intervals, depth 2)  
+- **💎 Asset Seeker**: Digital assets (4s intervals, depth 2)
 - **🔍 Recursive Explorer**: Hidden gems (6s intervals, depth 5)
 
 ## 📁 Project Structure
@@ -169,7 +182,7 @@ See [AUTONOMOUS_OPERATIONS.md](./AUTONOMOUS_OPERATIONS.md) for complete autonomo
 ├── bots/
 │   └── botManager.js         # Enhanced autonomous bot management
 ├── scripts/
-│   ├── monitor.sh           # Automated health monitoring  
+│   ├── monitor.sh           # Automated health monitoring
 │   └── backup.sh            # Automated backup system
 ├── systemd/
 │   └── domjuan-bot-system.service  # Linux systemd service
@@ -189,6 +202,7 @@ See [AUTONOMOUS_OPERATIONS.md](./AUTONOMOUS_OPERATIONS.md) for complete autonomo
 ## 🚀 Production Deployment
 
 ### Automated Deployment (Zero-Touch)
+
 The system deploys automatically via GitHub Actions on every push to main:
 
 1. **Multi-platform testing** across Node.js 18.x, 20.x, 22.x
@@ -199,6 +213,7 @@ The system deploys automatically via GitHub Actions on every push to main:
 ### Manual Deployment Options
 
 #### Docker Production Deployment
+
 ```bash
 # Build and deploy with health monitoring
 docker-compose up -d
@@ -211,6 +226,7 @@ docker-compose up -d --scale domjuan-bot-system=2
 ```
 
 #### Heroku Deployment
+
 ```bash
 # Automatic via GitHub integration or manual:
 git push heroku main
@@ -220,6 +236,7 @@ curl https://your-app.herokuapp.com/health
 ```
 
 #### PM2 Production Setup
+
 ```bash
 # Install PM2 globally
 npm install -g pm2
@@ -243,7 +260,7 @@ EXPORT_INTERVAL_MS=300000           # Data export frequency (5 minutes)
 MAX_CONSECUTIVE_ERRORS=5            # Bot failure tolerance
 DATA_DIR=./data                     # Data storage location
 
-# Monitoring & Alerting  
+# Monitoring & Alerting
 WEBHOOK_URL=https://discord.com/api/webhooks/your_webhook_url
 HEALTH_CHECK_INTERVAL_MS=60000      # Health monitoring frequency
 
@@ -254,7 +271,7 @@ MIN_FREE_DISK_MB=100               # Disk space threshold
 
 # Legacy Payment Processing (Optional)
 STRIPE_SECRET_KEY=your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key  
+STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 ```
 
@@ -268,13 +285,14 @@ The autonomous system is compatible with:
 - **Railway** (Container deployment)
 - **Render** (Fully managed)
 - **DigitalOcean App Platform**
-- **AWS Elastic Beanstalk** 
+- **AWS Elastic Beanstalk**
 - **Google Cloud Run**
 - **Linux servers** (systemd service included)
 
 ## 🔧 Autonomous Monitoring
 
 ### Health Endpoints
+
 ```bash
 # Basic health check (for load balancers)
 curl http://localhost:3000/health
@@ -288,6 +306,7 @@ curl http://localhost:3000/api/export/csv
 ```
 
 ### Automated Monitoring
+
 The system includes monitoring scripts that can be scheduled via cron:
 
 ```bash
@@ -301,15 +320,18 @@ crontab /tmp/domjuan-cron
 ```
 
 ### Webhook Notifications
+
 Configure Discord or Slack webhooks to receive autonomous system alerts:
+
 - Domain discovery notifications
-- System health alerts  
+- System health alerts
 - Backup completion confirmations
 - Critical failure warnings
 
 ## 🧪 Testing Autonomous Features
 
 ### Health Check Testing
+
 ```bash
 # Start system and test health
 npm start &
@@ -322,6 +344,7 @@ curl -X POST http://localhost:3000/api/restart-bots
 ```
 
 ### Docker Testing
+
 ```bash
 # Build and test container
 npm run docker:build
@@ -333,6 +356,7 @@ curl http://localhost:3000/health
 ```
 
 ### Failure Recovery Testing
+
 ```bash
 # Test bot auto-restart (simulate failure)
 curl -X POST http://localhost:3000/api/stop-bots
@@ -344,7 +368,7 @@ curl http://localhost:3000/health
 
 - **[AUTONOMOUS_OPERATIONS.md](./AUTONOMOUS_OPERATIONS.md)** - Complete autonomous setup guide
 - **[DASHBOARD_DOCUMENTATION.md](./DASHBOARD_DOCUMENTATION.md)** - Dashboard features and usage
-- **[DOMAIN_BEST_PRACTICES.md](./DOMAIN_BEST_PRACTICES.md)** - Domain acquisition guidelines  
+- **[DOMAIN_BEST_PRACTICES.md](./DOMAIN_BEST_PRACTICES.md)** - Domain acquisition guidelines
 - **[SECURITY.md](./SECURITY.md)** - Security configuration and best practices
 - **[BEST_PRACTICES.md](./BEST_PRACTICES.md)** - Development and deployment practices
 
@@ -357,19 +381,21 @@ This system achieves true autonomous operation:
 ✅ **Autonomous Monitoring**: Continuous health checks with smart alerting  
 ✅ **Data Management**: Automated backups, exports, and cleanup  
 ✅ **Resource Management**: Memory, CPU, and disk monitoring with limits  
-✅ **Multi-Platform**: Deploy anywhere with consistent behavior  
+✅ **Multi-Platform**: Deploy anywhere with consistent behavior
 
 **The button has been eliminated. Manual intervention is no longer required.**
 
 ## 📊 Performance & Scaling
 
 ### Resource Usage
+
 - **Memory**: ~50-100MB base + 10MB per active bot
-- **CPU**: Minimal when idle, bursts during discovery/acquisition  
+- **CPU**: Minimal when idle, bursts during discovery/acquisition
 - **Disk**: Grows with discovered domains (~1MB per 1000 domains)
 - **Network**: Webhook notifications and health checks only
 
 ### Horizontal Scaling
+
 ```bash
 # Scale with Docker Compose
 docker-compose up -d --scale domjuan-bot-system=3
@@ -381,18 +407,21 @@ pm2 scale domjuan-bot-system 3
 ## 🤝 Support & Maintenance
 
 ### Automated Maintenance
+
 All maintenance is automated:
+
 - Daily backups and log rotation
-- Weekly system restarts and cleanup  
+- Weekly system restarts and cleanup
 - Monthly old data purging
 - Continuous health monitoring
 
 ### Manual Support (Rarely Needed)
+
 ```bash
 # Check system status
 npm run health
 
-# View system logs  
+# View system logs
 npm run pm2:logs        # PM2
 npm run docker:logs     # Docker
 
@@ -402,7 +431,9 @@ npm run pm2:start
 ```
 
 ### Troubleshooting
+
 If the autonomous system needs attention:
+
 1. Check health endpoint: `curl http://localhost:3000/health`
 2. Review recent webhook notifications
 3. Examine application logs for errors
@@ -414,6 +445,7 @@ The system is designed to self-diagnose and self-heal from most issues automatic
 ## 📈 Success Metrics
 
 Monitor these metrics to verify autonomous operation:
+
 - **System Uptime**: 99.9%+ expected with auto-restart
 - **Bot Discovery Rate**: Consistent domain discoveries per hour
 - **Auto-Recovery Rate**: Failed bots restart within 30 seconds
