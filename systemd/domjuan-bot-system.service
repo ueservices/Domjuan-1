@@ -1,0 +1,50 @@
+[Unit]
+Description=Domjuan Autonomous Domain Discovery Bot System
+Documentation=https://github.com/ueservices/Domjuan-1
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=nodejs
+Group=nodejs
+WorkingDirectory=/opt/domjuan-bot-system
+ExecStart=/usr/bin/node server.js
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutSec=30
+RestartSec=5
+Restart=always
+RestartKillSignal=SIGINT
+
+# Environment variables
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=AUTO_RESTART_BOTS=true
+Environment=EXPORT_INTERVAL_MS=300000
+Environment=MAX_CONSECUTIVE_ERRORS=5
+Environment=DATA_DIR=/opt/domjuan-bot-system/data
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/domjuan-bot-system/data /opt/domjuan-bot-system/logs
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=512M
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=domjuan-bot-system
+
+[Install]
+WantedBy=multi-user.target

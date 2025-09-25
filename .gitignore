@@ -52,3 +52,14 @@ build/
 
 # Cache
 .cache/
+
+# Autonomous Bot System Data (exclude from git)
+data/
+backups/
+test_export.json
+
+# PM2 logs and runtime
+.pm2/
+
+# Docker volumes and data
+docker-data/
