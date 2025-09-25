@@ -1,8 +1,10 @@
 const js = require('@eslint/js');
 const prettier = require('eslint-plugin-prettier');
+const security = require('eslint-plugin-security');
 
 module.exports = [
     js.configs.recommended,
+    security.configs.recommended,
     {
         languageOptions: {
             ecmaVersion: 2021,
@@ -33,7 +35,8 @@ module.exports = [
             }
         },
         plugins: {
-            prettier
+            prettier,
+            security
         },
         rules: {
             // Code quality rules - relaxed for this codebase
@@ -51,6 +54,10 @@ module.exports = [
 
             // Allow case declarations (common in switch statements)
             'no-case-declarations': 'off',
+
+            // Security rules - configured for this application type
+            'security/detect-non-literal-fs-filename': 'off', // This app manages files with dynamic names
+            'security/detect-object-injection': 'off', // Many legitimate uses in this bot system
 
             // Style rules (handled by prettier)
             'prettier/prettier': [

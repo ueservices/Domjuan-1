@@ -16,7 +16,10 @@ const server = http.createServer(app);
 const io = socketIo(server);
 const PORT = process.env.PORT || 3000;
 
-// Ensure required directories exist
+/**
+ * Ensure required directories exist for the application
+ * Creates data, logs, and backups directories if they don't exist
+ */
 async function ensureDirectories() {
     const dirs = ['./data', './logs', './backups'];
     for (const dir of dirs) {

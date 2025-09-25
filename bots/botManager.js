@@ -7,7 +7,14 @@ const EventEmitter = require('events');
 const fs = require('fs').promises;
 const path = require('path');
 
+/**
+ * Bot Manager - Manages multiple domain discovery bots
+ * Handles bot lifecycle, monitoring, and data export
+ */
 class BotManager extends EventEmitter {
+    /**
+     * Initialize the bot manager with default bots and configuration
+     */
     constructor() {
         super();
         this.bots = {

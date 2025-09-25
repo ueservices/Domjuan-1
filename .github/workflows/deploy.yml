@@ -35,6 +35,9 @@ jobs:
             - name: Check for security vulnerabilities
               run: npm audit --audit-level moderate
 
+            - name: Run unit tests
+              run: npm run test:unit
+
             - name: Run health check test
               run: |
                   # Start server in background
