@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1",
-    "pm2": "^5.3.0"
+    "pm2": "^6.0.13"
   },
   "engines": {
     "node": ">=18.0.0"
