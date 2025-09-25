@@ -86,6 +86,23 @@ module.exports = [
         ]
     },
     {
+        files: ['tests/**/*.js'],
+        languageOptions: {
+            globals: {
+                // Jest globals
+                jest: 'readonly',
+                describe: 'readonly',
+                it: 'readonly',
+                beforeAll: 'readonly',
+                afterAll: 'readonly',
+                beforeEach: 'readonly',
+                afterEach: 'readonly',
+                expect: 'readonly',
+                test: 'readonly'
+            }
+        }
+    },
+    {
         files: ['scripts/**/*.js'],
         rules: {
             'no-console': 'off'

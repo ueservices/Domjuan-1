@@ -2,7 +2,6 @@
  * Basic server tests demonstrating testing best practices
  */
 const request = require('supertest');
-const path = require('path');
 
 // Mock the bot manager to avoid starting actual bots in tests
 jest.mock('../bots/botManager', () => {
@@ -28,8 +27,6 @@ jest.mock('../bots/botManager', () => {
 const app = require('../server');
 
 describe('Server Health Endpoints', () => {
-    let server;
-
     beforeAll(() => {
         // Set up server but don't start listening
         process.env.NODE_ENV = 'test';
@@ -121,7 +118,9 @@ describe('Error Handling', () => {
     });
 
     it('should handle invalid service requests', async () => {
-        const response = await request(app).get('/api/services/invalid-service');
+        const response = await request(app).get(
+            '/api/services/invalid-service'
+        );
 
         expect(response.status).toBe(404);
         expect(response.body).toHaveProperty('error');

@@ -56,17 +56,20 @@ This project follows security best practices including:
 ## Security Features
 
 ### Environment Security
+
 - All sensitive configuration uses environment variables
 - No secrets stored in version control
 - `.env.example` provides safe configuration templates
 
 ### Container Security
+
 - Dockerfile uses non-root user
 - Minimal base image (Alpine Linux)
 - Health checks included
 - Resource limits configured
 
 ### Application Security
+
 - Express.js security headers via Helmet
 - CORS protection
 - Input validation for all endpoints
@@ -74,6 +77,7 @@ This project follows security best practices including:
 - Secure webhook handling
 
 ### Dependencies
+
 - Regular dependency updates via Dependabot
 - Automated security scanning
 - Minimal dependency footprint
