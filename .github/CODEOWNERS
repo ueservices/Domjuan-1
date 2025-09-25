@@ -1,0 +1,16 @@
+# Global code owners - all files require approval from these users
+* @ueservices
+
+# Critical files that need extra review
+package.json @ueservices
+package-lock.json @ueservices
+Dockerfile @ueservices
+docker-compose.yml @ueservices
+.github/workflows/ @ueservices
+server.js @ueservices
+bots/ @ueservices
+
+# Security and configuration files
+.github/dependabot.yml @ueservices
+SECURITY.md @ueservices
+eslint.config.js @ueservices

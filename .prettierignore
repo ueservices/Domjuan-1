@@ -1,0 +1,11 @@
+node_modules/
+.git/
+dist/
+build/
+coverage/
+.nyc_output/
+logs/
+data/
+backups/
+*.log
+package-lock.json

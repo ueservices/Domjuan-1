@@ -1,73 +1,73 @@
 version: '3.8'
 
 services:
-  domjuan-bot-system:
-    build: .
-    container_name: domjuan-autonomous-bots
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - AUTO_RESTART_BOTS=true
-      - EXPORT_INTERVAL_MS=300000
-      - MAX_CONSECUTIVE_ERRORS=5
-      - DATA_DIR=/app/data
-      - WEBHOOK_URL=${WEBHOOK_URL:-}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
-    volumes:
-      - bot_data:/app/data
-      - bot_logs:/app/logs
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    domjuan-bot-system:
+        build: .
+        container_name: domjuan-autonomous-bots
+        restart: unless-stopped
+        ports:
+            - '3000:3000'
+        environment:
+            - NODE_ENV=production
+            - PORT=3000
+            - AUTO_RESTART_BOTS=true
+            - EXPORT_INTERVAL_MS=300000
+            - MAX_CONSECUTIVE_ERRORS=5
+            - DATA_DIR=/app/data
+            - WEBHOOK_URL=${WEBHOOK_URL:-}
+            - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+            - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+        volumes:
+            - bot_data:/app/data
+            - bot_logs:/app/logs
+        healthcheck:
+            test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+        logging:
+            driver: 'json-file'
+            options:
+                max-size: '10m'
+                max-file: '3'
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                reservations:
+                    memory: 256M
 
-  # Log rotation service
-  logrotate:
-    image: alpine:latest
-    container_name: domjuan-logrotate
-    restart: unless-stopped
-    volumes:
-      - bot_logs:/var/log/domjuan
-    command: >
-      sh -c "
-        apk add --no-cache logrotate &&
-        echo '/var/log/domjuan/*.log {
-          daily
-          rotate 7
-          compress
-          missingok
-          notifempty
-          create 644 root root
-        }' > /etc/logrotate.d/domjuan &&
-        while true; do
-          logrotate /etc/logrotate.d/domjuan
-          sleep 86400
-        done
-      "
+    # Log rotation service
+    logrotate:
+        image: alpine:latest
+        container_name: domjuan-logrotate
+        restart: unless-stopped
+        volumes:
+            - bot_logs:/var/log/domjuan
+        command: >
+            sh -c "
+              apk add --no-cache logrotate &&
+              echo '/var/log/domjuan/*.log {
+                daily
+                rotate 7
+                compress
+                missingok
+                notifempty
+                create 644 root root
+              }' > /etc/logrotate.d/domjuan &&
+              while true; do
+                logrotate /etc/logrotate.d/domjuan
+                sleep 86400
+              done
+            "
 
 volumes:
-  bot_data:
-    driver: local
-  bot_logs:
-    driver: local
+    bot_data:
+        driver: local
+    bot_logs:
+        driver: local
 
 networks:
-  default:
-    name: domjuan-network
+    default:
+        name: domjuan-network

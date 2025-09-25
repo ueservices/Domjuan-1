@@ -9,24 +9,28 @@ The Domjuan Bot System is now fully autonomous - it requires **zero manual inter
 ## 🤖 Autonomous Features
 
 ### ✅ Self-Healing & Recovery
+
 - **Auto-restart failed bots** - Individual bots restart automatically after failures
-- **Exponential backoff** - Smart retry logic prevents cascading failures  
+- **Exponential backoff** - Smart retry logic prevents cascading failures
 - **Process monitoring** - PM2/Docker healthchecks ensure system stays running
 - **Resource management** - Automatic memory and CPU monitoring with alerts
 
 ### ✅ Zero-Touch Operations
+
 - **Automated exports** - JSON/CSV data exports every 5 minutes (configurable)
 - **Scheduled backups** - Daily automated backups with configurable retention
 - **Log rotation** - Automatic log management and cleanup
 - **Health monitoring** - Continuous system health checks with alerting
 
 ### ✅ Production Deployment
+
 - **Docker containerization** - Ready-to-deploy container with healthchecks
 - **CI/CD integration** - Zero-touch deployments via GitHub Actions
 - **Multiple deployment targets** - Heroku, Vercel, Docker, systemd service
 - **Environment configuration** - All settings via environment variables
 
 ### ✅ Monitoring & Alerting
+
 - **Webhook notifications** - Discord/Slack alerts for discoveries and failures
 - **Health endpoints** - RESTful health checks for monitoring systems
 - **Performance metrics** - Real-time bot performance and resource usage
@@ -35,6 +39,7 @@ The Domjuan Bot System is now fully autonomous - it requires **zero manual inter
 ## 🚀 Quick Start - Autonomous Setup
 
 ### Option 1: Docker (Recommended)
+
 ```bash
 # Clone and start autonomous system
 git clone https://github.com/ueservices/Domjuan-1.git
@@ -52,6 +57,7 @@ curl http://localhost:3000/health
 ```
 
 ### Option 2: PM2 Process Manager
+
 ```bash
 # Install PM2 globally
 npm install -g pm2
@@ -68,6 +74,7 @@ pm2 logs domjuan-bot-system
 ```
 
 ### Option 3: Systemd Service (Linux)
+
 ```bash
 # Copy service file
 sudo cp systemd/domjuan-bot-system.service /etc/systemd/system/
@@ -114,11 +121,13 @@ COMPRESS_BACKUPS=true              # Compress backup files
 Configure Discord or Slack webhooks to receive autonomous system notifications:
 
 **Discord Setup:**
+
 1. Go to your Discord server settings → Integrations → Webhooks
 2. Create a new webhook and copy the URL
 3. Set `WEBHOOK_URL` environment variable
 
 **Slack Setup:**
+
 1. Go to your Slack workspace → Apps → Incoming Webhooks
 2. Create webhook and copy URL
 3. Set `WEBHOOK_URL` environment variable
@@ -134,7 +143,7 @@ crontab /tmp/domjuan-cron
 
 # Key scheduled tasks:
 # - Health monitoring every 5 minutes
-# - Daily backups at 2:00 AM  
+# - Daily backups at 2:00 AM
 # - Weekly restarts for maintenance
 # - Monthly cleanup of old data
 ```
@@ -142,6 +151,7 @@ crontab /tmp/domjuan-cron
 ## 📊 Monitoring Endpoints
 
 ### Health Check
+
 ```bash
 # Basic health status
 curl http://localhost:3000/health
@@ -151,18 +161,20 @@ curl http://localhost:3000/api/status | jq '.'
 ```
 
 ### Bot Control (API)
+
 ```bash
 # Start all bots
 curl -X POST http://localhost:3000/api/start-bots
 
 # Stop all bots
-curl -X POST http://localhost:3000/api/stop-bots  
+curl -X POST http://localhost:3000/api/stop-bots
 
 # Restart all bots
 curl -X POST http://localhost:3000/api/restart-bots
 ```
 
 ### Data Export
+
 ```bash
 # Export current data as JSON
 curl http://localhost:3000/api/export/json -o domains.json
@@ -174,16 +186,19 @@ curl http://localhost:3000/api/export/csv -o domains.csv
 ## 🔄 Self-Healing Mechanisms
 
 ### Bot-Level Recovery
+
 - Individual bots detect failures and restart with exponential backoff
 - Maximum consecutive error limits prevent infinite restart loops
 - Health status tracking identifies unhealthy bots
 
-### System-Level Recovery  
+### System-Level Recovery
+
 - PM2/Docker automatically restart the entire application if it crashes
 - Healthcheck endpoints enable external monitoring systems to detect issues
 - Webhook notifications alert administrators to critical failures
 
 ### Data Protection
+
 - Automated daily backups with configurable retention
 - Periodic data exports ensure no data loss
 - Backup verification checks ensure backup integrity
@@ -191,13 +206,16 @@ curl http://localhost:3000/api/export/csv -o domains.csv
 ## 📈 Performance Monitoring
 
 ### Resource Usage
+
 The system automatically monitors:
+
 - Memory usage with configurable thresholds
 - CPU usage tracking and alerts
 - Disk space monitoring for data directory
 - Network connectivity for webhook notifications
 
 ### Bot Performance
+
 - Discovery success rates per bot
 - Domain acquisition rates
 - Error rates and consecutive failure tracking
@@ -206,24 +224,28 @@ The system automatically monitors:
 ## 🔧 Troubleshooting Autonomous Issues
 
 ### System Not Starting
+
 1. Check environment variables are set correctly
 2. Verify data/logs directories exist and are writable
 3. Check port 3000 is available
 4. Review startup logs for errors
 
 ### Bots Not Running
+
 1. Check health endpoint: `curl http://localhost:3000/health`
 2. Manually start bots: `curl -X POST http://localhost:3000/api/start-bots`
 3. Review bot error logs in the dashboard
 4. Verify auto-restart is enabled: `AUTO_RESTART_BOTS=true`
 
 ### Missing Notifications
+
 1. Verify webhook URL is correct and accessible
 2. Check webhook service (Discord/Slack) is accepting requests
 3. Review webhook logs in system output
 4. Test webhook manually with curl
 
-### Data Export Issues  
+### Data Export Issues
+
 1. Check data directory exists and is writable
 2. Verify disk space is sufficient
 3. Test manual export via API endpoints
@@ -232,7 +254,9 @@ The system automatically monitors:
 ## 🚀 Zero-Touch Deployment
 
 ### GitHub Actions (Automatic)
+
 The system deploys automatically on every push to main:
+
 1. Code is tested across multiple Node.js versions
 2. Docker image is built and pushed
 3. Application is deployed to Heroku/Vercel
@@ -240,6 +264,7 @@ The system deploys automatically on every push to main:
 5. Slack notifications confirm deployment status
 
 ### Manual Deployment Commands
+
 ```bash
 # Deploy to Heroku
 npm run deploy:heroku
@@ -257,7 +282,7 @@ npm run pm2:start
 All maintenance is automated via cron jobs:
 
 - **Every 5 minutes**: Health monitoring and alerting
-- **Every hour**: Data export and backup verification  
+- **Every hour**: Data export and backup verification
 - **Daily**: Full system backup and log rotation
 - **Weekly**: Bot restart for maintenance and cleanup
 - **Monthly**: Old data cleanup and system health report
@@ -275,9 +300,10 @@ Your autonomous system is working correctly when:
 ## 🎯 Achievement: "Never Touch the Button Again"
 
 Once configured, this system:
+
 - ✅ Runs indefinitely without manual intervention
 - ✅ Recovers automatically from all types of failures
-- ✅ Backs up data and exports discoveries continuously  
+- ✅ Backs up data and exports discoveries continuously
 - ✅ Deploys updates automatically via CI/CD
 - ✅ Monitors itself and sends alerts when needed
 - ✅ Maintains optimal performance through automated restarts

@@ -7,7 +7,14 @@ const EventEmitter = require('events');
 const fs = require('fs').promises;
 const path = require('path');
 
+/**
+ * Bot Manager - Manages multiple domain discovery bots
+ * Handles bot lifecycle, monitoring, and data export
+ */
 class BotManager extends EventEmitter {
+    /**
+     * Initialize the bot manager with default bots and configuration
+     */
     constructor() {
         super();
         this.bots = {
@@ -48,11 +55,11 @@ class BotManager extends EventEmitter {
 
     startAllBots() {
         if (this.isRunning) return;
-        
+
         this.isRunning = true;
         this.startTime = new Date();
-        
-        Object.values(this.bots).forEach(bot => {
+
+        Object.values(this.bots).forEach((bot) => {
             bot.start();
             bot.on('discovery', (data) => this.handleBotDiscovery(data));
             bot.on('acquisition', (data) => this.handleBotAcquisition(data));
@@ -61,33 +68,39 @@ class BotManager extends EventEmitter {
         });
 
         this.emit('allBotsStarted', { timestamp: this.startTime });
-        this.sendWebhookNotification('🤖 All domain discovery bots started successfully', 'success');
+        this.sendWebhookNotification(
+            '🤖 All domain discovery bots started successfully',
+            'success'
+        );
     }
 
     stopAllBots() {
         if (!this.isRunning) return;
-        
+
         this.isRunning = false;
-        Object.values(this.bots).forEach(bot => bot.stop());
-        
+        Object.values(this.bots).forEach((bot) => bot.stop());
+
         if (this.exportTimer) {
             clearInterval(this.exportTimer);
             this.exportTimer = null;
         }
-        
+
         if (this.healthCheckTimer) {
             clearInterval(this.healthCheckTimer);
             this.healthCheckTimer = null;
         }
-        
+
         this.emit('allBotsStopped', { timestamp: new Date() });
-        this.sendWebhookNotification('🛑 All domain discovery bots stopped', 'warning');
+        this.sendWebhookNotification(
+            '🛑 All domain discovery bots stopped',
+            'warning'
+        );
     }
 
     async handleBotError(data) {
         this.stats.failedAttempts++;
         console.error(`Bot Error [${data.bot}]:`, data.error);
-        
+
         this.emit('error', {
             ...data,
             timestamp: new Date(),
@@ -98,17 +111,25 @@ class BotManager extends EventEmitter {
         if (this.config.autoRestart) {
             console.log(`Auto-restarting bot: ${data.bot}`);
             setTimeout(() => {
-                const bot = Object.values(this.bots).find(b => b.name === data.bot);
+                const bot = Object.values(this.bots).find(
+                    (b) => b.name === data.bot
+                );
                 if (bot && !bot.isActive) {
                     bot.start();
-                    this.sendWebhookNotification(`🔄 Auto-restarted bot: ${data.bot}`, 'info');
+                    this.sendWebhookNotification(
+                        `🔄 Auto-restarted bot: ${data.bot}`,
+                        'info'
+                    );
                 }
             }, 5000); // Wait 5 seconds before restart
         }
 
         // Send critical alert for repeated failures
         if (this.stats.failedAttempts % 10 === 0) {
-            this.sendWebhookNotification(`⚠️ Critical: ${this.stats.failedAttempts} total bot failures detected`, 'error');
+            this.sendWebhookNotification(
+                `⚠️ Critical: ${this.stats.failedAttempts} total bot failures detected`,
+                'error'
+            );
         }
     }
 
@@ -122,18 +143,24 @@ class BotManager extends EventEmitter {
 
         // Send notification for significant discoveries
         if (this.stats.totalDomains % 50 === 0) {
-            this.sendWebhookNotification(`🎯 Milestone: ${this.stats.totalDomains} domains discovered!`, 'success');
+            this.sendWebhookNotification(
+                `🎯 Milestone: ${this.stats.totalDomains} domains discovered!`,
+                'success'
+            );
         }
     }
 
     handleBotAcquisition(data) {
         if (data.success) {
             this.stats.successfulAcquisitions++;
-            this.sendWebhookNotification(`✅ Domain acquired: ${data.domain} by ${data.bot}`, 'success');
+            this.sendWebhookNotification(
+                `✅ Domain acquired: ${data.domain} by ${data.bot}`,
+                'success'
+            );
         } else {
             this.stats.failedAttempts++;
         }
-        
+
         this.emit('acquisition', {
             ...data,
             timestamp: new Date(),
@@ -161,22 +188,23 @@ class BotManager extends EventEmitter {
             };
 
             const payload = {
-                embeds: [{
-                    title: 'Domain Discovery Bot System',
-                    description: message,
-                    color: colors[type] || colors.info,
-                    timestamp: new Date().toISOString(),
-                    footer: { text: 'Autonomous Domain Discovery' }
-                }]
+                embeds: [
+                    {
+                        title: 'Domain Discovery Bot System',
+                        description: message,
+                        color: colors[type] || colors.info,
+                        timestamp: new Date().toISOString(),
+                        footer: { text: 'Autonomous Domain Discovery' }
+                    }
+                ]
             };
 
             // Use node's built-in https module for webhook requests
             const https = require('https');
-            const url = require('url');
-            
+
             const webhookUrl = new URL(this.config.webhookUrl);
             const data = JSON.stringify(payload);
-            
+
             const options = {
                 hostname: webhookUrl.hostname,
                 port: webhookUrl.port || 443,
@@ -205,7 +233,7 @@ class BotManager extends EventEmitter {
 
     startPeriodicExports() {
         if (this.exportTimer) return;
-        
+
         this.exportTimer = setInterval(async () => {
             try {
                 await this.exportAllData();
@@ -218,29 +246,36 @@ class BotManager extends EventEmitter {
 
     startHealthMonitoring() {
         if (this.healthCheckTimer) return;
-        
+
         this.healthCheckTimer = setInterval(() => {
             const healthReport = this.getHealthReport();
-            
+
             // Check for unhealthy bots
-            const unhealthyBots = healthReport.bots.filter(bot => !bot.isHealthy);
+            const unhealthyBots = healthReport.bots.filter(
+                (bot) => !bot.isHealthy
+            );
             if (unhealthyBots.length > 0) {
-                this.sendWebhookNotification(`⚠️ Unhealthy bots detected: ${unhealthyBots.map(b => b.name).join(', ')}`, 'warning');
+                this.sendWebhookNotification(
+                    `⚠️ Unhealthy bots detected: ${unhealthyBots.map((b) => b.name).join(', ')}`,
+                    'warning'
+                );
             }
-            
+
             this.emit('healthCheck', healthReport);
         }, 60000); // Check every minute
     }
 
     getHealthReport() {
-        const uptime = this.startTime ? Date.now() - this.startTime.getTime() : 0;
-        
+        const uptime = this.startTime
+            ? Date.now() - this.startTime.getTime()
+            : 0;
+
         return {
             timestamp: new Date(),
             uptime,
             isRunning: this.isRunning,
             stats: { ...this.stats },
-            bots: Object.values(this.bots).map(bot => ({
+            bots: Object.values(this.bots).map((bot) => ({
                 name: bot.name,
                 isActive: bot.isActive,
                 isHealthy: bot.isActive && bot.stats.errors < 10,
@@ -256,7 +291,7 @@ class BotManager extends EventEmitter {
             timestamp: new Date(),
             uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
             stats: { ...this.stats },
-            bots: Object.values(this.bots).map(bot => ({
+            bots: Object.values(this.bots).map((bot) => ({
                 name: bot.name,
                 status: bot.getStatus(),
                 discovered: bot.discovered,
@@ -265,11 +300,17 @@ class BotManager extends EventEmitter {
         };
 
         // Export as JSON
-        const jsonPath = path.join(this.config.dataDir, `bot-data-${timestamp}.json`);
+        const jsonPath = path.join(
+            this.config.dataDir,
+            `bot-data-${timestamp}.json`
+        );
         await fs.writeFile(jsonPath, JSON.stringify(exportData, null, 2));
 
         // Export as CSV
-        const csvPath = path.join(this.config.dataDir, `domains-${timestamp}.csv`);
+        const csvPath = path.join(
+            this.config.dataDir,
+            `domains-${timestamp}.csv`
+        );
         const csvData = this.generateCSV(exportData);
         await fs.writeFile(csvPath, csvData);
 
@@ -277,12 +318,15 @@ class BotManager extends EventEmitter {
     }
 
     generateCSV(exportData) {
-        const headers = 'Domain,Bot,Type,Status,AcquisitionDate,Value,Registrar\n';
+        const headers =
+            'Domain,Bot,Type,Status,AcquisitionDate,Value,Registrar\n';
         let rows = '';
 
-        exportData.bots.forEach(bot => {
-            bot.discovered.forEach(domain => {
-                const acquired = bot.acquired.find(a => a.domain === domain.domain);
+        exportData.bots.forEach((bot) => {
+            bot.discovered.forEach((domain) => {
+                const acquired = bot.acquired.find(
+                    (a) => a.domain === domain.domain
+                );
                 rows += `${domain.domain},${bot.name},${domain.type},${acquired ? 'Acquired' : 'Discovered'},${acquired ? acquired.acquiredAt : ''},${domain.value || acquired?.price || ''},${domain.registrar || ''}\n`;
             });
         });
@@ -293,17 +337,29 @@ class BotManager extends EventEmitter {
     async loadPreviousData() {
         try {
             const files = await fs.readdir(this.config.dataDir);
-            const latestFile = files.filter(f => f.startsWith('bot-data-')).sort().pop();
-            
+            const latestFile = files
+                .filter((f) => f.startsWith('bot-data-'))
+                .sort()
+                .pop();
+
             if (latestFile) {
-                const data = JSON.parse(await fs.readFile(path.join(this.config.dataDir, latestFile), 'utf8'));
+                const data = JSON.parse(
+                    await fs.readFile(
+                        path.join(this.config.dataDir, latestFile),
+                        'utf8'
+                    )
+                );
                 // Restore some stats but start fresh with bot state
                 this.stats.totalDomains = data.stats.totalDomains || 0;
-                this.stats.successfulAcquisitions = data.stats.successfulAcquisitions || 0;
+                this.stats.successfulAcquisitions =
+                    data.stats.successfulAcquisitions || 0;
                 console.log(`Loaded previous data from ${latestFile}`);
             }
         } catch (error) {
-            console.log('No previous data found or failed to load:', error.message);
+            console.log(
+                'No previous data found or failed to load:',
+                error.message
+            );
         }
     }
 
@@ -316,7 +372,7 @@ class BotManager extends EventEmitter {
             ...this.stats,
             isRunning: this.isRunning,
             uptime: this.startTime ? Date.now() - this.startTime.getTime() : 0,
-            bots: Object.keys(this.bots).map(name => ({
+            bots: Object.keys(this.bots).map((name) => ({
                 name,
                 status: this.bots[name].getStatus()
             }))
@@ -327,11 +383,13 @@ class BotManager extends EventEmitter {
     async getHealthStatus() {
         const health = this.getHealthReport();
         const memUsage = process.memoryUsage();
-        
+
         return {
-            status: health.bots.every(bot => bot.isHealthy) ? 'healthy' : 'unhealthy',
+            status: health.bots.every((bot) => bot.isHealthy)
+                ? 'healthy'
+                : 'unhealthy',
             uptime: health.uptime,
-            botsActive: health.bots.filter(bot => bot.isActive).length,
+            botsActive: health.bots.filter((bot) => bot.isActive).length,
             totalBots: health.bots.length,
             stats: health.stats,
             memory: {
@@ -345,9 +403,16 @@ class BotManager extends EventEmitter {
     async getLastExportTime() {
         try {
             const files = await fs.readdir(this.config.dataDir);
-            const exportFiles = files.filter(f => f.startsWith('bot-data-')).sort();
+            const exportFiles = files
+                .filter((f) => f.startsWith('bot-data-'))
+                .sort();
             if (exportFiles.length > 0) {
-                const stats = await fs.stat(path.join(this.config.dataDir, exportFiles[exportFiles.length - 1]));
+                const stats = await fs.stat(
+                    path.join(
+                        this.config.dataDir,
+                        exportFiles[exportFiles.length - 1]
+                    )
+                );
                 return stats.mtime;
             }
         } catch (error) {
@@ -369,7 +434,8 @@ class BaseDomainBot extends EventEmitter {
         this.searchTimer = null;
         this.lastActivity = null;
         this.consecutiveErrors = 0;
-        this.maxConsecutiveErrors = parseInt(process.env.MAX_CONSECUTIVE_ERRORS) || 5;
+        this.maxConsecutiveErrors =
+            parseInt(process.env.MAX_CONSECUTIVE_ERRORS) || 5;
         this.backoffMultiplier = 2;
         this.stats = {
             domainsScanned: 0,
@@ -384,19 +450,19 @@ class BaseDomainBot extends EventEmitter {
 
     start() {
         if (this.isActive) return;
-        
+
         this.isActive = true;
         this.stats.currentDepth = 0;
         this.stats.startTime = new Date();
         this.consecutiveErrors = 0;
         this.lastActivity = new Date();
-        
-        this.emit('status', { 
-            bot: this.name, 
-            status: 'active', 
+
+        this.emit('status', {
+            bot: this.name,
+            status: 'active',
             message: `${this.name} started searching...`
         });
-        
+
         this.runSearchCycle();
     }
 
@@ -406,9 +472,9 @@ class BaseDomainBot extends EventEmitter {
             clearTimeout(this.searchTimer);
             this.searchTimer = null;
         }
-        this.emit('status', { 
-            bot: this.name, 
-            status: 'stopped', 
+        this.emit('status', {
+            bot: this.name,
+            status: 'stopped',
             message: `${this.name} stopped`
         });
     }
@@ -420,9 +486,12 @@ class BaseDomainBot extends EventEmitter {
             .then(() => {
                 this.consecutiveErrors = 0; // Reset error count on success
                 this.lastActivity = new Date();
-                this.searchTimer = setTimeout(() => this.runSearchCycle(), this.searchInterval);
+                this.searchTimer = setTimeout(
+                    () => this.runSearchCycle(),
+                    this.searchInterval
+                );
             })
-            .catch(error => {
+            .catch((error) => {
                 this.consecutiveErrors++;
                 this.stats.errors++;
                 this.stats.lastError = {
@@ -432,18 +501,23 @@ class BaseDomainBot extends EventEmitter {
                 };
 
                 console.error(`[${this.name}] Search cycle error:`, error);
-                
-                this.emit('error', { 
-                    bot: this.name, 
-                    status: 'error', 
+
+                this.emit('error', {
+                    bot: this.name,
+                    status: 'error',
                     message: `Error in ${this.name}: ${error.message}`,
                     error: error,
                     consecutiveErrors: this.consecutiveErrors
                 });
 
                 // Implement exponential backoff for repeated errors
-                const backoffDelay = this.searchInterval * Math.pow(this.backoffMultiplier, Math.min(this.consecutiveErrors - 1, 5));
-                
+                const backoffDelay =
+                    this.searchInterval *
+                    Math.pow(
+                        this.backoffMultiplier,
+                        Math.min(this.consecutiveErrors - 1, 5)
+                    );
+
                 // Stop bot if too many consecutive errors
                 if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
                     this.emit('error', {
@@ -456,7 +530,10 @@ class BaseDomainBot extends EventEmitter {
                     return;
                 }
 
-                this.searchTimer = setTimeout(() => this.runSearchCycle(), backoffDelay);
+                this.searchTimer = setTimeout(
+                    () => this.runSearchCycle(),
+                    backoffDelay
+                );
             });
     }
 
@@ -466,14 +543,32 @@ class BaseDomainBot extends EventEmitter {
     }
 
     generateDomainName() {
-        const prefixes = ['digital', 'crypto', 'web', 'tech', 'ai', 'data', 'cloud', 'meta'];
-        const suffixes = ['asset', 'domain', 'hub', 'vault', 'zone', 'space', 'link', 'net'];
+        const prefixes = [
+            'digital',
+            'crypto',
+            'web',
+            'tech',
+            'ai',
+            'data',
+            'cloud',
+            'meta'
+        ];
+        const suffixes = [
+            'asset',
+            'domain',
+            'hub',
+            'vault',
+            'zone',
+            'space',
+            'link',
+            'net'
+        ];
         const tlds = ['.com', '.net', '.org', '.io', '.ai', '.tech'];
-        
+
         const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
         const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
         const tld = tlds[Math.floor(Math.random() * tlds.length)];
-        
+
         return `${prefix}${suffix}${Math.floor(Math.random() * 9999)}${tld}`;
     }
 
@@ -486,7 +581,9 @@ class BaseDomainBot extends EventEmitter {
             acquired: this.acquired.length,
             lastActivity: this.lastActivity,
             consecutiveErrors: this.consecutiveErrors,
-            uptime: this.stats.startTime ? Date.now() - this.stats.startTime.getTime() : 0
+            uptime: this.stats.startTime
+                ? Date.now() - this.stats.startTime.getTime()
+                : 0
         };
     }
 }
@@ -502,7 +599,9 @@ class DomainHunterBot extends BaseDomainBot {
         this.stats.domainsScanned++;
 
         // Simulate domain discovery
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 1000)
+        );
 
         if (Math.random() > 0.7) {
             this.stats.domainsDiscovered++;
@@ -510,7 +609,9 @@ class DomainHunterBot extends BaseDomainBot {
                 domain,
                 type: 'premium',
                 value: Math.floor(Math.random() * 10000) + 1000,
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
+                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][
+                    Math.floor(Math.random() * 3)
+                ]
             });
 
             this.emit('discovery', {
@@ -534,8 +635,10 @@ class DomainHunterBot extends BaseDomainBot {
     }
 
     async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000));
-        
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 2000)
+        );
+
         const success = Math.random() > 0.3;
         if (success) {
             this.stats.domainsAcquired++;
@@ -565,15 +668,21 @@ class AssetSeekerBot extends BaseDomainBot {
         const domain = this.generateDomainName();
         this.stats.domainsScanned++;
 
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1500));
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 1500)
+        );
 
         if (Math.random() > 0.6) {
             this.stats.domainsDiscovered++;
             this.discovered.push({
                 domain,
                 type: 'asset',
-                category: ['NFT', 'DeFi', 'Gaming', 'SaaS'][Math.floor(Math.random() * 4)],
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
+                category: ['NFT', 'DeFi', 'Gaming', 'SaaS'][
+                    Math.floor(Math.random() * 4)
+                ],
+                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][
+                    Math.floor(Math.random() * 3)
+                ]
             });
 
             this.emit('discovery', {
@@ -596,8 +705,10 @@ class AssetSeekerBot extends BaseDomainBot {
     }
 
     async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 1800));
-        
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 1800)
+        );
+
         const success = Math.random() > 0.25;
         if (success) {
             this.stats.domainsAcquired++;
@@ -626,9 +737,14 @@ class RecursiveExplorerBot extends BaseDomainBot {
     async performSearch() {
         const domain = this.generateDomainName();
         this.stats.domainsScanned++;
-        this.stats.currentDepth = Math.min(this.stats.currentDepth + 1, this.searchDepth);
+        this.stats.currentDepth = Math.min(
+            this.stats.currentDepth + 1,
+            this.searchDepth
+        );
 
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2000 + 1000));
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 2000 + 1000)
+        );
 
         if (Math.random() > 0.8) {
             this.stats.domainsDiscovered++;
@@ -637,7 +753,9 @@ class RecursiveExplorerBot extends BaseDomainBot {
                 type: 'hidden',
                 depth: this.stats.currentDepth,
                 potential: Math.floor(Math.random() * 100),
-                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][Math.floor(Math.random() * 3)]
+                registrar: ['GoDaddy', 'Namecheap', 'Network Solutions'][
+                    Math.floor(Math.random() * 3)
+                ]
             });
 
             this.emit('discovery', {
@@ -661,8 +779,10 @@ class RecursiveExplorerBot extends BaseDomainBot {
     }
 
     async attemptAcquisition(domain) {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 2500 + 500));
-        
+        await new Promise((resolve) =>
+            setTimeout(resolve, Math.random() * 2500 + 500)
+        );
+
         const success = Math.random() > 0.4;
         if (success) {
             this.stats.domainsAcquired++;
