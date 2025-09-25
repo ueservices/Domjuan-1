@@ -347,6 +347,7 @@ curl http://localhost:3000/health
 - **[DOMAIN_BEST_PRACTICES.md](./DOMAIN_BEST_PRACTICES.md)** - Domain acquisition guidelines  
 - **[SECURITY.md](./SECURITY.md)** - Security configuration and best practices
 - **[BEST_PRACTICES.md](./BEST_PRACTICES.md)** - Development and deployment practices
+- **[copilot-instructions.md](./copilot-instructions.md)** - GitHub Copilot coding agent instructions
 
 ## 🎯 Achievement: Zero-Touch Operation
 
