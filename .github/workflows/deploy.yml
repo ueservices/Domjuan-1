@@ -139,4 +139,4 @@ jobs:
           Build: ${{ needs.build-and-push.result }}
           Heroku: ${{ needs.deploy-heroku.result }}
           Vercel: ${{ needs.deploy-vercel.result }}
-      if: always() && secrets.SLACK_WEBHOOK
+          always() && secrets.SLACK_WEBHOOK
